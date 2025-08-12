@@ -1,0 +1,15 @@
+Flask
+Flask-SocketIO
+Pillow
+easyocr
+keyboard
+numpy<2.0
+opencv-python
+psutil
+pyautogui
+pygetwindow
+pytz
+pywin32
+requests
+
+fpdf2

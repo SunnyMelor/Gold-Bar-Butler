@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金条管家 v3.1 - 历史记录</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 30s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+            color: #ffffff;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            25% {
+                background-position: 100% 50%;
+            }
+
+            50% {
+                background-position: 100% 100%;
+            }
+
+            75% {
+                background-position: 0% 100%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 30px 0 20px 0;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            border-radius: 2px;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: translateX(-50%) scaleX(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateX(-50%) scaleX(1.2);
+            }
+        }
+
+        .header h1 {
+            font-size: 3.2em;
+            margin-bottom: 12px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+            animation: gradientText 6s ease infinite;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes gradientText {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .header p {
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .nav-links a:hover::before {
+            left: 100%;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #4ecdc4, #45b7d1);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-links a.active::after {
+            width: 80%;
+        }
+
+        .nav-links a:hover::after {
+            width: 60%;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-links a.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 页面切换动画 */
+        .page-transition {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .page-fade-out {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        .page-fade-in {
+            opacity: 1;
+            transform: translateY(0);
+            animation: pageSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes pageSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.98);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .controls {
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-group select option {
+            background: #1a1a2e;
+            color: #ffffff;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .stat-card h3 {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #feca57, #ff9ff3, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .data-table-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            color: #ffffff;
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .data-table th:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+        }
+
+        .data-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .account-name {
+            font-weight: 700;
+            color: #4ecdc4;
+            font-size: 15px;
+        }
+
+        .quantity {
+            font-size: 1.3em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.5px;
+        }
+
+        .timestamp {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .loading,
+        .error,
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+        }
+
+        .loading h3,
+        .empty-state h3 {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 12px;
+            font-size: 1.5em;
+        }
+
+        .loading p,
+        .empty-state p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .error {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(238, 82, 83, 0.1));
+            border-color: rgba(255, 107, 107, 0.3);
+        }
+
+        .error h3 {
+            color: #ff6b6b;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .stats-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container fade-in">
+        <div class="header fade-in">
+            <h1>📈 金条管家 v3.1</h1>
+            <p>历史数据透视表</p>
+        </div>
+
+        <div class="nav-links fade-in">
+            <a href="/" onclick="handlePageTransition(event, '/')">📊 主面板</a>
+            <a href="/history" class="active" onclick="handlePageTransition(event, '/history')">📈 历史记录</a>
+        </div>
+
+        <div class="controls">
+            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div class="filter-group">
+                    <label for="accountFilter">账号筛选:</label>
+                    <select id="accountFilter">
+                        <option value="">全部账号</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="dateFilter">日期筛选:</label>
+                    <input type="date" id="dateFilter">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-primary" onclick="applyFilters()">🔍 应用筛选</button>
+                <button class="btn btn-success" onclick="exportData()">📥 导出数据</button>
+            </div>
+        </div>
+
+        <div class="stats-summary" id="statsSummary" style="display: none;">
+            <div class="stat-card">
+                <h3>总记录数</h3>
+                <div class="value" id="totalRecords">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>活跃账号</h3>
+                <div class="value" id="activeAccounts">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>最新记录</h3>
+                <div class="value" id="latestRecord" style="font-size: 1.2em;">--</div>
+            </div>
+        </div>
+
+        <div id="dataContainer" class="page-transition">
+            <div class="loading">
+                <h3>📡 正在加载历史数据...</h3>
+                <p>请稍候</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 提示: 点击表头可以排序 | 使用筛选功能查看特定数据</p>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        let filteredData = [];
+        let sortColumn = -1;
+        let sortDirection = 1;
+
+        function formatTime(timeString) {
+            const date = new Date(timeString);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function updateStats(data) {
+            const totalRecords = data.length;
+            const uniqueAccounts = [...new Set(data.map(item => item.account_name))].length;
+            const latestRecord = data.length > 0 ? formatTime(data[0].timestamp) : '--';
+
+            document.getElementById('totalRecords').textContent = totalRecords.toLocaleString();
+            document.getElementById('activeAccounts').textContent = uniqueAccounts;
+            document.getElementById('latestRecord').textContent = latestRecord;
+
+            document.getElementById('statsSummary').style.display = 'grid';
+        }
+
+        function populateAccountFilter(data) {
+            const accounts = [...new Set(data.map(item => item.account_name))].sort();
+            const select = document.getElementById('accountFilter');
+
+            select.innerHTML = '<option value="">全部账号</option>';
+
+            accounts.forEach(account => {
+                const option = document.createElement('option');
+                option.value = account;
+                option.textContent = account;
+                select.appendChild(option);
+            });
+        }
+
+        function renderTable(data) {
+            const container = document.getElementById('dataContainer');
+
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📭 暂无历史数据</h3>
+                        <p>请使用扫描器记录数据</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let tableHTML = `
+                <div class="data-table-container">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(0)">🎮 账号名称 ${sortColumn === 0 ? (sortDirection === 1 ? '↑' : '↓') : '↕️'}</th>
+                                    <th onclick="sortTable(1)">💰 金条数量 ${sortColumn === 1 ? (sortDirection === 1 ? '↑' : '↓') : '↕️'}</th>
+                                    <th onclick="sortTable(2)">🕒 记录时间 ${sortColumn === 2 ? (sortDirection === 1 ? '↑' : '↓') : '↕️'}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            data.forEach(item => {
+                tableHTML += `
+                    <tr>
+                        <td class="account-name">${item.account_name}</td>
+                        <td class="quantity">${item.quantity.toLocaleString()}</td>
+                        <td class="timestamp">${formatTime(item.timestamp)}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection *= -1;
+            } else {
+                sortColumn = column;
+                sortDirection = 1;
+            }
+
+            filteredData.sort((a, b) => {
+                let aVal, bVal;
+                switch (column) {
+                    case 0: // 账号名称
+                        aVal = a.account_name;
+                        bVal = b.account_name;
+                        break;
+                    case 1: // 金条数量
+                        aVal = a.quantity;
+                        bVal = b.quantity;
+                        break;
+                    case 2: // 记录时间
+                        aVal = new Date(a.timestamp);
+                        bVal = new Date(b.timestamp);
+                        break;
+                }
+
+                if (aVal < bVal) return -1 * sortDirection;
+                if (aVal > bVal) return 1 * sortDirection;
+                return 0;
+            });
+
+            renderTable(filteredData);
+        }
+
+        function loadData() {
+            fetch('/api/history-data')
+                .then(response => response.json())
+                .then(data => {
+                    allData = data;
+                    filteredData = data;
+
+                    updateStats(data);
+                    populateAccountFilter(data);
+                    renderTable(data);
+                })
+                .catch(error => {
+                    console.error('Error loading data:', error);
+                    document.getElementById('dataContainer').innerHTML = `
+                        <div class="error">
+                            <h3>❌ 数据加载失败</h3>
+                            <p>请检查服务器是否正常运行</p>
+                            <p>错误信息: ${error.message}</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function applyFilters() {
+            const accountFilter = document.getElementById('accountFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+
+            filteredData = allData.filter(item => {
+                let matchAccount = !accountFilter || item.account_name === accountFilter;
+                let matchDate = !dateFilter || item.timestamp.startsWith(dateFilter);
+                return matchAccount && matchDate;
+            });
+
+            updateStats(filteredData);
+            renderTable(filteredData);
+        }
+
+        function exportData() {
+            if (filteredData.length === 0) {
+                alert('没有数据可以导出');
+                return;
+            }
+
+            const csvContent = "data:text/csv;charset=utf-8,"
+                + "账号名称,金条数量,记录时间\n"
+                + filteredData.map(item =>
+                    `${item.account_name},${item.quantity},${item.timestamp}`
+                ).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `金条管家历史数据_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 页面切换动画处理
+        function handlePageTransition(event, url) {
+            event.preventDefault();
+
+            // 添加淡出效果
+            const container = document.getElementById('dataContainer');
+            const statsSummary = document.getElementById('statsSummary');
+
+            container.classList.add('page-fade-out');
+            if (statsSummary) {
+                statsSummary.classList.add('page-fade-out');
+            }
+
+            // 更新导航状态
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 延迟跳转，让动画播放完成
+            setTimeout(() => {
+                window.location.href = url;
+            }, 200);
+        }
+
+        // 页面加载完成后的初始化
+        function initializePage() {
+            // 添加页面淡入效果
+            const container = document.getElementById('dataContainer');
+            const statsSummary = document.getElementById('statsSummary');
+
+            container.classList.add('page-fade-in');
+            if (statsSummary) {
+                statsSummary.classList.add('page-fade-in');
+            }
+
+            loadData();
+        }
+
+        // 页面加载完成后开始加载数据
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+
+</html>
