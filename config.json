@@ -1,0 +1,287 @@
+{
+  "hotkey": "f9",
+  "resolutions": {
+    "1944x1139": {
+      "scan_profiles": [
+        {
+          "name": "背包界面",
+          "context_check": {
+            "region": [
+              50,
+              150,
+              100,
+              50
+            ],
+            "keywords": [
+              "资源包",
+              "背包"
+            ]
+          },
+          "gold_region": [
+            646,
+            885,
+            141,
+            64
+          ]
+        },
+        {
+          "name": "交易所界面",
+          "context_check": {
+            "region": [
+              50,
+              100,
+              100,
+              50
+            ],
+            "keywords": [
+              "交易"
+            ]
+          },
+          "gold_region": [
+            646,
+            895,
+            141,
+            64
+          ]
+        },
+        {
+          "name": "背包",
+          "context_check": {
+            "keywords": [
+              "背包"
+            ],
+            "region": [
+              178,
+              118,
+              100,
+              46
+            ]
+          },
+          "gold_region": [
+            648,
+            887,
+            135,
+            56
+          ]
+        },
+        {
+          "name": "交易",
+          "context_check": {
+            "keywords": [
+              "交易"
+            ],
+            "region": [
+              176,
+              113,
+              89,
+              49
+            ]
+          },
+          "gold_region": [
+            672,
+            887,
+            142,
+            44
+          ]
+        }
+      ]
+    },
+    "2025x1184": {
+      "scan_profiles": [
+        {
+          "name": "默认",
+          "context_check": null,
+          "gold_region": [
+            673,
+            935,
+            147,
+            43
+          ]
+        }
+      ]
+    },
+    "2424x1409": {
+      "scan_profiles": [
+        {
+          "name": "默认",
+          "context_check": null,
+          "gold_region": [
+            809,
+            1105,
+            178,
+            55
+          ]
+        }
+      ]
+    },
+    "2561x1485": {
+      "scan_profiles": [
+        {
+          "name": "默认",
+          "context_check": null,
+          "gold_region": [
+            848,
+            1167,
+            182,
+            58
+          ]
+        }
+      ]
+    },
+    "1464x869": {
+      "scan_profiles": [
+        {
+          "name": "默认",
+          "context_check": {
+            "keywords": [],
+            "region": [
+              138,
+              100,
+              65,
+              32
+            ]
+          },
+          "gold_region": [
+            482,
+            681,
+            104,
+            36
+          ]
+        },
+        {
+          "name": "背包",
+          "context_check": {
+            "keywords": [
+              "背包"
+            ],
+            "region": [
+              142,
+              92,
+              60,
+              46
+            ]
+          },
+          "gold_region": [
+            482,
+            683,
+            115,
+            32
+          ]
+        },
+        {
+          "name": "交易",
+          "context_check": {
+            "keywords": [
+              "交易"
+            ],
+            "region": [
+              143,
+              96,
+              59,
+              40
+            ]
+          },
+          "gold_region": [
+            504,
+            674,
+            109,
+            40
+          ]
+        }
+      ]
+    },
+    "976x579": {
+      "scan_profiles": [
+        {
+          "name": "默认",
+          "context_check": null,
+          "gold_region": [
+            321,
+            456,
+            75,
+            18
+          ]
+        },
+        {
+          "name": "交易",
+          "context_check": {
+            "keywords": [
+              "交易"
+            ],
+            "region": [
+              92,
+              63,
+              43,
+              25
+            ]
+          },
+          "gold_region": [
+            339,
+            450,
+            70,
+            24
+          ]
+        },
+        {
+          "name": "背包",
+          "context_check": {
+            "keywords": [
+              "背包"
+            ],
+            "region": [
+              91,
+              63,
+              47,
+              24
+            ]
+          },
+          "gold_region": [
+            324,
+            453,
+            72,
+            25
+          ]
+        },
+        {
+          "name": "金条",
+          "context_check": null,
+          "gold_region": [
+            321,
+            451,
+            73,
+            29
+          ]
+        }
+      ]
+    },
+    "1296x759": {
+      "scan_profiles": [
+        {
+          "name": "默认",
+          "context_check": null,
+          "gold_region": [
+            393,
+            593,
+            164,
+            34
+          ]
+        }
+      ]
+    },
+    "160x28": {
+      "scan_profiles": [
+        {
+          "name": "默认",
+          "context_check": null,
+          "gold_region": [
+            273,
+            464,
+            67,
+            25
+          ]
+        }
+      ]
+    }
+  },
+  "use_gpu": true
+}

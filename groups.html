@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金条管家 v1.1 - 分组管理</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 30s ease infinite;
+            min-height: 100vh; padding: 20px; line-height: 1.6; color: #ffffff;
+        }
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 25% { background-position: 100% 50%; } 50% { background-position: 100% 100%; } 75% { background-position: 0% 100%; } 100% { background-position: 0% 50%; } }
+        .container { max-width: 1800px; margin: 0 auto; padding: 0 20px; }
+        .header { text-align: center; margin-bottom: 25px; padding: 30px 0 20px 0; position: relative; }
+        .header h1 { font-size: 3.2em; margin-bottom: 12px; font-weight: 900; background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: gradientText 6s ease infinite; }
+        @keyframes gradientText { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        .header p { font-size: 1.2em; color: rgba(255, 255, 255, 0.8); font-weight: 500; margin-top: 15px; }
+        .nav-links { display: flex; justify-content: center; gap: 20px; margin-bottom: 25px; flex-wrap: wrap; }
+        .nav-links a { display: inline-flex; align-items: center; padding: 12px 24px; background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.85); text-decoration: none; border-radius: 16px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 600; font-size: 14px; border: 1px solid rgba(255, 255, 255, 0.15); }
+        .nav-links a:hover { background: rgba(255, 255, 255, 0.15); color: #ffffff; transform: translateY(-3px) scale(1.02); }
+        .nav-links a.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-color: transparent; }
+        .footer { text-align: center; padding: 20px; color: rgba(255, 255, 255, 0.6); font-size: 14px; margin-top: 30px; }
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Group Management Specific Styles */
+        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.4s; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-warning { background: linear-gradient(135deg, #feca57, #ff9f43); color: white; }
+        .btn-danger { background: linear-gradient(135deg, #ff6b6b, #ee5a52); color: white; }
+        .btn-secondary { background: #495057; color: white; }
+
+        #bulk-actions { display: none; gap: 10px; }
+
+        .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .group-card { position: relative; background: rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(20px); display: flex; flex-direction: column; gap: 15px; }
+        .group-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding-bottom: 10px; }
+        .group-header h3 { color: #4ecdc4; }
+        .group-actions button { background: none; border: none; color: #aaa; cursor: pointer; font-size: 14px; padding: 5px; }
+        .group-actions button:hover { color: white; }
+        .group-notes { font-size: 12px; color: #ccc; font-style: italic; min-height: 20px; }
+        .group-members { list-style: none; display: flex; flex-direction: column; gap: 8px; user-select: none; }
+        .group-footer { border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 10px; margin-top: auto; display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; color: #c0c0c0; }
+
+        .member-item { display: flex; flex-direction: column; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: background-color 0.2s; }
+        .member-main { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .member-item:hover { background: rgba(255,255,255,0.1); }
+        .member-item.selected { background-color: rgba(78, 205, 196, 0.3); border-left: 3px solid #4ecdc4; padding-left: 9px; }
+        .member-main > span { flex-grow: 1; }
+        .member-main > div { margin-left: 15px; display: flex; align-items: center; gap: 8px; }
+        .member-main select { background: #34495e; border: 1px solid #4a627a; border-radius: 5px; color: white; padding: 2px 4px; font-size: 11px; max-width: 90px; }
+
+        .details-btn { background: #495057; color: white; border: none; border-radius: 5px; padding: 2px 8px; font-size: 11px; cursor: pointer; }
+        .details-btn:hover { background: #6c757d; }
+
+        .member-details { display: none; background: rgba(0,0,0,0.15); padding: 10px; margin-top: 10px; border-radius: 6px; gap: 15px; justify-content: space-around; }
+        .member-details.visible { display: flex; }
+
+        .task-checkbox-container { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #ccc; }
+        .task-checkbox { width: 22px; height: 22px; border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 6px; background: linear-gradient(135deg, #ff6b6b, #ee5a52); cursor: pointer; transition: all 0.3s; position: relative; appearance: none; -webkit-appearance: none; }
+        .task-checkbox:checked { background: linear-gradient(135deg, #4ecdc4, #44a08d); border-color: #4ecdc4; }
+        .task-checkbox:checked::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 14px; font-weight: bold; }
+
+        .selection-box { position: absolute; border: 2px dashed #4ecdc4; background: rgba(78, 205, 196, 0.1); pointer-events: none; z-index: 1000; border-radius: 4px; }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content { background: #2c3e50; padding: 30px 40px; border-radius: 16px; width: 90%; max-width: 500px; text-align: left; border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4); transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
+        .modal-content h3 { font-size: 1.5em; margin-bottom: 20px; color: #4ecdc4; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; background: #34495e; border: 1px solid #4a627a; border-radius: 8px; padding: 10px; color: white; font-size: 14px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    </style>
+</head>
+
+<body>
+    <div class="container fade-in">
+        <div class="header">
+            <h1>🏆 金条管家 v1.1</h1>
+            <p>分组与团队管理</p>
+        </div>
+
+        <div class="nav-links">
+            <a href="/">📊 主面板</a>
+            <a href="/history">📈 历史记录</a>
+            <a href="/groups" class="active">📂 分组管理</a>
+            <a href="/days-tracker">🌱 萌芽计划</a>
+        </div>
+
+        <div class="controls">
+            <div id="bulk-actions">
+                <button class="btn btn-warning" onclick="openBulkMoveModal()">批量移动</button>
+            </div>
+            <button class="btn btn-primary" onclick="openGroupModal()">+ 创建新分组</button>
+        </div>
+
+        <div id="groups-grid" class="groups-grid"></div>
+
+        <div class="footer">
+            <p>💡 使用 Ctrl/Shift + 左键进行多选，然后进行批量移动。</p>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="groupModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modalTitle">创建新分组</h3>
+            <form id="groupForm">
+                <input type="hidden" id="groupId" value="">
+                <div class="form-group"><label for="groupName">分组名称</label><input type="text" id="groupName" required></div>
+                <div class="form-group"><label for="groupNotes">分组备注</label><textarea id="groupNotes" rows="3"></textarea></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeGroupModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="bulkMoveModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>批量移动账号</h3>
+            <div class="form-group">
+                <label for="bulkMoveTargetGroup">移动到分组</label>
+                <select id="bulkMoveTargetGroup"></select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeBulkMoveModal()">取消</button>
+                <button type="button" class="btn btn-primary" onclick="executeBulkMove()">确认移动</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allAccounts = [];
+        let allGroups = [];
+        let selectedAccounts = new Set();
+        let lastSelectedAccount = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAllData();
+            document.getElementById('groupForm').addEventListener('submit', saveGroup);
+        });
+
+        function naturalSort(a, b) {
+            const regex = /(\d+)|(\D+)/g;
+            const aParts = a.match(regex) || [];
+            const bParts = b.match(regex) || [];
+            const len = Math.max(aParts.length, bParts.length);
+            for (let i = 0; i < len; i++) {
+                const aPart = aParts[i] || '';
+                const bPart = bParts[i] || '';
+                if (/^\d+$/.test(aPart) && /^\d+$/.test(bPart)) {
+                    const aNum = parseInt(aPart, 10);
+                    const bNum = parseInt(bPart, 10);
+                    if (aNum !== bNum) return aNum - bNum;
+                } else if (aPart !== bPart) {
+                    return aPart.localeCompare(bPart);
+                }
+            }
+            return 0;
+        }
+
+        async function loadAllData() {
+            try {
+                const [accountsRes, groupsRes] = await Promise.all([fetch('/api/accounts'), fetch('/api/groups')]);
+                allAccounts = await accountsRes.json();
+                allGroups = await groupsRes.json();
+                renderUI();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('groups-grid').innerHTML = '<p>数据加载失败，请刷新页面重试。</p>';
+            }
+        }
+
+        function renderUI() {
+            const grid = document.getElementById('groups-grid');
+            grid.innerHTML = '';
+            const groupMembers = {};
+            allGroups.forEach(group => groupMembers[group.name] = []);
+            const unassignedMembers = [];
+
+            allAccounts.forEach(account => {
+                const groupName = account.group_name;
+                if (groupName && groupMembers.hasOwnProperty(groupName)) {
+                    groupMembers[groupName].push(account);
+                } else {
+                    unassignedMembers.push(account);
+                }
+            });
+
+            Object.values(groupMembers).forEach(members => members.sort((a, b) => naturalSort(a.account_name, b.account_name)));
+            unassignedMembers.sort((a, b) => naturalSort(a.account_name, b.account_name));
+
+            if (unassignedMembers.length > 0) {
+                grid.appendChild(createGroupCard({ id: 'unassigned', name: '未分配账号' }, unassignedMembers));
+            }
+            allGroups.sort((a, b) => naturalSort(a.name, b.name)).forEach(group => {
+                grid.appendChild(createGroupCard(group, groupMembers[group.name]));
+            });
+            updateSelectionUI();
+        }
+
+        function createGroupCard(group, members) {
+            const card = document.createElement('div');
+            card.className = 'group-card';
+            card.dataset.groupId = group.id;
+            const isUnassigned = group.id === 'unassigned';
+            const actions = isUnassigned ? '' : `
+                <div class="group-actions">
+                    <button onclick="openGroupModal(${group.id})">✏️</button>
+                    <button onclick="deleteGroup(${group.id})">🗑️</button>
+                </div>`;
+            const totalGold = members.reduce((sum, acc) => sum + (acc.gold_quantity || 0), 0);
+
+            card.innerHTML = `
+                <div class="group-header"><h3>${group.name}</h3>${actions}</div>
+                <p class="group-notes">${group.notes || (isUnassigned ? '所有未分配到特定组的账号' : '暂无备注')}</p>
+                <ul class="group-members">${members.map(acc => createMemberItem(acc)).join('')}</ul>
+                <div class="group-footer">
+                    <span>成员: ${members.length}</span>
+                    <span>总金条: ${totalGold.toLocaleString()}</span>
+                </div>`;
+            
+            initializeGroupCard(card);
+            return card;
+        }
+
+        function createMemberItem(account) {
+            const otherGroups = allGroups.filter(g => g.name !== account.group_name);
+            const options = otherGroups.map(g => `<option value="${g.name}">${g.name}</option>`).join('');
+            const unassignOption = account.group_name ? '<option value="">-- 未分配 --</option>' : '';
+            const isSelected = selectedAccounts.has(account.account_name);
+
+            return `
+                <li class="member-item ${isSelected ? 'selected' : ''}" data-account-name="${account.account_name}">
+                    <div class="member-main">
+                        <span>${account.account_name}</span>
+                        <div>
+                            <button class="details-btn" onclick="toggleDetails(event, '${account.account_name}')">详情</button>
+                            <select onchange="moveAccount(event, '${account.account_name}', this.value)">
+                                <option value="" disabled selected>移动到...</option>
+                                ${unassignOption}${options}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="member-details" id="details-${account.account_name}">
+                        <div class="task-checkbox-container">
+                            <span>钓鱼</span>
+                            <input type="checkbox" class="task-checkbox" data-field="weekly_fishing_done" ${account.weekly_fishing_done ? 'checked' : ''} onchange="saveTaskStatus(event, '${account.account_name}', 'weekly_fishing_done', this.checked)">
+                        </div>
+                        <div class="task-checkbox-container">
+                            <span>周本</span>
+                            <input type="checkbox" class="task-checkbox" data-field="weekly_boss_done" ${account.weekly_boss_done ? 'checked' : ''} onchange="saveTaskStatus(event, '${account.account_name}', 'weekly_boss_done', this.checked)">
+                        </div>
+                        <div class="task-checkbox-container">
+                            <span>联盟</span>
+                            <input type="checkbox" class="task-checkbox" data-field="weekly_alliance_done" ${account.weekly_alliance_done ? 'checked' : ''} onchange="saveTaskStatus(event, '${account.account_name}', 'weekly_alliance_done', this.checked)">
+                        </div>
+                        <div class="task-checkbox-container">
+                            <span>积分</span>
+                            <input type="checkbox" class="task-checkbox" data-field="weekly_points_done" ${account.weekly_points_done ? 'checked' : ''} onchange="saveTaskStatus(event, '${account.account_name}', 'weekly_points_done', this.checked)">
+                        </div>
+                    </div>
+                </li>`;
+        }
+
+        function handleMemberClick(event) {
+            if (event.target.closest('.member-main > div, .member-details')) return;
+            const li = event.currentTarget;
+            const accountName = li.dataset.accountName;
+            const allRenderedItems = Array.from(document.querySelectorAll('.member-item'));
+            const currentIndex = allRenderedItems.findIndex(item => item.dataset.accountName === accountName);
+
+            if (event.shiftKey && lastSelectedAccount) {
+                const lastIndex = allRenderedItems.findIndex(item => item.dataset.accountName === lastSelectedAccount);
+                const [start, end] = [Math.min(currentIndex, lastIndex), Math.max(currentIndex, lastIndex)];
+                for (let i = start; i <= end; i++) {
+                    selectedAccounts.add(allRenderedItems[i].dataset.accountName);
+                }
+            } else if (event.ctrlKey) {
+                if (selectedAccounts.has(accountName)) {
+                    selectedAccounts.delete(accountName);
+                } else {
+                    selectedAccounts.add(accountName);
+                }
+            } else {
+                if (selectedAccounts.has(accountName) && selectedAccounts.size === 1) {
+                    selectedAccounts.clear();
+                } else {
+                    selectedAccounts.clear();
+                    selectedAccounts.add(accountName);
+                }
+            }
+            lastSelectedAccount = accountName;
+            updateSelectionUI();
+        }
+
+        function updateSelectionUI() {
+            document.querySelectorAll('.member-item').forEach(item => {
+                item.classList.toggle('selected', selectedAccounts.has(item.dataset.accountName));
+            });
+            document.getElementById('bulk-actions').style.display = selectedAccounts.size > 0 ? 'flex' : 'none';
+        }
+
+        function openGroupModal(id = null) {
+            const group = id ? allGroups.find(g => g.id === id) : null;
+            
+            if (id && !group) {
+                console.error(`Group with id ${id} not found.`);
+                return;
+            }
+
+            document.getElementById('groupId').value = group ? group.id : '';
+            document.getElementById('groupName').value = group ? group.name : '';
+            document.getElementById('groupNotes').value = group ? (group.notes || '') : '';
+            document.getElementById('modalTitle').textContent = id ? '编辑分组' : '创建新分组';
+            document.getElementById('groupModal').classList.add('visible');
+        }
+
+        function closeGroupModal() { document.getElementById('groupModal').classList.remove('visible'); }
+        function openBulkMoveModal() {
+            const select = document.getElementById('bulkMoveTargetGroup');
+            select.innerHTML = '<option value="">-- 未分配 --</option>' + allGroups.map(g => `<option value="${g.name}">${g.name}</option>`).join('');
+            document.getElementById('bulkMoveModal').classList.add('visible');
+        }
+        function closeBulkMoveModal() { document.getElementById('bulkMoveModal').classList.remove('visible'); }
+
+        async function saveGroup(event) {
+            event.preventDefault();
+            const id = document.getElementById('groupId').value;
+            const name = document.getElementById('groupName').value;
+            const notes = document.getElementById('groupNotes').value;
+            const url = id ? `/api/groups/${id}` : '/api/groups';
+            const method = id ? 'PUT' : 'POST';
+            try {
+                const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, notes }) });
+                if (!response.ok) { const err = await response.json(); throw new Error(err.error || '保存失败'); }
+                closeGroupModal();
+                await loadAllData();
+            } catch (error) { alert(`Error: ${error.message}`); }
+        }
+
+        async function deleteGroup(id) {
+            if (!confirm('确定要删除这个分组吗？组内成员将变为“未分配”。')) return;
+            try {
+                const response = await fetch(`/api/groups/${id}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error('删除失败');
+                await loadAllData();
+            } catch (error) { alert(`Error: ${error.message}`); }
+        }
+
+        async function moveAccount(event, accountName, newGroupName) {
+            event.stopPropagation();
+            try {
+                const response = await fetch('/api/accounts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_name: accountName, group_name: newGroupName }) });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || '移动失败');
+                }
+                await loadAllData(); // Reload all data on success
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function executeBulkMove() {
+            const newGroupName = document.getElementById('bulkMoveTargetGroup').value;
+            const accountNames = Array.from(selectedAccounts);
+            if (accountNames.length === 0) return;
+
+            try {
+                const response = await fetch('/api/accounts/bulk-update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        account_names: accountNames,
+                        updates: { group_name: newGroupName }
+                    })
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || '批量移动失败');
+                }
+                selectedAccounts.clear();
+                closeBulkMoveModal();
+                await loadAllData(); // Reload all data on success
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        function toggleDetails(event, accountName) {
+            event.stopPropagation();
+            const clickedAccountIsSelected = selectedAccounts.has(accountName);
+            const accountsToToggle = (clickedAccountIsSelected && selectedAccounts.size > 1) ? Array.from(selectedAccounts) : [accountName];
+            const firstDetailDiv = document.getElementById(`details-${accountsToToggle[0]}`);
+            const shouldBeVisible = !firstDetailDiv.classList.contains('visible');
+            accountsToToggle.forEach(name => {
+                const detailsDiv = document.getElementById(`details-${name}`);
+                if (detailsDiv) detailsDiv.classList.toggle('visible', shouldBeVisible);
+            });
+        }
+
+        async function saveTaskStatus(event, accountName, field, isChecked) {
+            event.stopPropagation();
+            const updateData = { account_name: accountName, [field]: isChecked };
+            const account = allAccounts.find(acc => acc.account_name === accountName);
+            if (account) account[field] = isChecked;
+            try {
+                const response = await fetch('/api/accounts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateData) });
+                if (!response.ok) throw new Error('保存任务状态失败');
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                if (account) account[field] = !isChecked;
+                event.target.checked = !isChecked;
+            }
+        }
+
+        function initializeGroupCard(card) {
+            card.querySelectorAll('.member-item').forEach(item => item.addEventListener('click', handleMemberClick));
+            let selectionBox = null;
+            let isSelecting = false;
+            let startX = 0, startY = 0;
+
+            const onMouseDown = e => {
+                if (e.target.closest('.member-main') || e.target.classList.contains('task-checkbox')) return;
+                isSelecting = true;
+                const cardRect = card.getBoundingClientRect();
+                startX = e.clientX - cardRect.left;
+                startY = e.clientY - cardRect.top;
+                selectionBox = document.createElement('div');
+                selectionBox.className = 'selection-box';
+                card.appendChild(selectionBox);
+                selectionBox.style.left = `${startX}px`;
+                selectionBox.style.top = `${startY}px`;
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+                e.preventDefault();
+            };
+
+            const onMouseMove = e => {
+                if (!isSelecting) return;
+                const cardRect = card.getBoundingClientRect();
+                const currentX = e.clientX - cardRect.left;
+                const currentY = e.clientY - cardRect.top;
+                const left = Math.min(startX, currentX);
+                const top = Math.min(startY, currentY);
+                const width = Math.abs(currentX - startX);
+                const height = Math.abs(currentY - startY);
+                selectionBox.style.left = `${left}px`;
+                selectionBox.style.top = `${top}px`;
+                selectionBox.style.width = `${width}px`;
+                selectionBox.style.height = `${height}px`;
+            };
+
+            const onMouseUp = e => {
+                if (!isSelecting) return;
+                const boxRect = selectionBox.getBoundingClientRect();
+                const checkboxesToToggle = [];
+                card.querySelectorAll('.task-checkbox').forEach(checkbox => {
+                    if (checkbox.offsetParent === null) return; // Skip hidden checkboxes
+                    const checkboxRect = checkbox.getBoundingClientRect();
+                    if (boxRect.left < checkboxRect.right && boxRect.right > checkboxRect.left && boxRect.top < checkboxRect.bottom && boxRect.bottom > checkboxRect.top) {
+                        checkboxesToToggle.push(checkbox);
+                    }
+                });
+
+                if (checkboxesToToggle.length > 0) {
+                    const firstState = checkboxesToToggle[0].checked;
+                    const promises = checkboxesToToggle.map(checkbox => {
+                        const newState = !firstState;
+                        checkbox.checked = newState;
+                        const accountName = checkbox.closest('.member-item').dataset.accountName;
+                        const field = checkbox.dataset.field;
+                        return saveTaskStatus(e, accountName, field, newState);
+                    });
+                    Promise.all(promises).catch(err => console.error("部分任务保存失败", err));
+                }
+
+                card.removeChild(selectionBox);
+                isSelecting = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            };
+
+            card.addEventListener('mousedown', onMouseDown);
+        }
+    </script>
+</body>
+</html>

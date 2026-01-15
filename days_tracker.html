@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金条管家 v1.1 - 萌芽计划</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 性能优化 - 减少重绘和回流，但避免影响滚动 */
+        .task-checkbox,
+        .pin-btn {
+            will-change: transform;
+            backface-visibility: hidden;
+        }
+
+        /* 确保表格行在滚动时不消失 */
+        .data-table tr {
+            position: relative;
+            z-index: 1;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 30s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+            color: #ffffff;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            25% {
+                background-position: 100% 50%;
+            }
+
+            50% {
+                background-position: 100% 100%;
+            }
+
+            75% {
+                background-position: 0% 100%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 30px 0 20px 0;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            border-radius: 2px;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: translateX(-50%) scaleX(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateX(-50%) scaleX(1.2);
+            }
+        }
+
+        .header h1 {
+            font-size: 3.2em;
+            margin-bottom: 12px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+            animation: gradientText 6s ease infinite;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes gradientText {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            margin-top: 15px;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .nav-links a:hover::before {
+            left: 100%;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-links a.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(30px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .controls::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .status-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.6);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.2);
+            }
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: white;
+            box-shadow: 0 6px 20px rgba(254, 202, 87, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(254, 202, 87, 0.4);
+        }
+
+        .data-table-container {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(40px);
+            overflow: visible;
+            /* 改为visible，避免内容被裁剪 */
+            box-shadow:
+                0 25px 50px rgba(0, 0, 0, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            position: relative;
+            user-select: none;
+            /* 防止文本选择 */
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            table-layout: fixed;
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+            color: #ffffff;
+            padding: 18px 14px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.8px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            resize: horizontal;
+            position: relative;
+            text-transform: uppercase;
+            backdrop-filter: blur(20px);
+        }
+
+        .data-table th::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        }
+
+        .data-table th.sortable:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.12));
+            cursor: pointer;
+        }
+
+        .sort-indicator {
+            margin-left: 8px;
+            font-size: 10px;
+            display: inline-block;
+            width: 10px;
+            text-align: center;
+        }
+
+        .resizer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+            cursor: col-resize;
+            background: rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .data-table th:hover .resizer {
+            opacity: 1;
+        }
+
+        .data-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: scale(1.001);
+        }
+
+        .data-table tr:hover td {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.05) inset;
+        }
+
+        .account-name {
+            font-weight: 700;
+            color: #4ecdc4;
+            text-align: left !important;
+            padding-left: 16px !important;
+            line-height: 1.3;
+        }
+
+        .level-input,
+        .notes-input {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 10px;
+            color: #ffffff;
+            font-size: 12px;
+            width: 100%;
+            max-width: 80px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .level-input:focus,
+        .notes-input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+        }
+
+        .group-select {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 10px;
+            color: #ffffff;
+            font-size: 12px;
+            width: 100%;
+            max-width: 150px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .group-select:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            background: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+        }
+
+        .group-select option {
+            background: #1a1a2e;
+            color: #ffffff;
+            padding: 8px;
+        }
+
+        .data-table tr {
+            cursor: default;
+            transition: background-color 0.15s ease;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .auto-group-hint {
+            font-size: 10px;
+            color: #888;
+            margin-left: 5px;
+        }
+
+        .notes-input {
+            max-width: 120px;
+        }
+
+        .level-input {
+            max-width: 60px;
+        }
+
+        .level-input::-webkit-outer-spin-button,
+        .level-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .checkbox-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .task-checkbox {
+            width: 28px;
+            height: 28px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            appearance: none;
+            -webkit-appearance: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .task-checkbox:checked {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border-color: #4ecdc4;
+            animation: checkboxSuccess 0.6s ease;
+        }
+
+        @keyframes checkboxSuccess {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .task-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            animation: checkmarkAppear 0.3s ease 0.2s both;
+        }
+
+        @keyframes checkmarkAppear {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .task-checkbox:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .quantity-display {
+            font-size: 1.2em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+        }
+
+        .change-display {
+            font-weight: bold;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .change-display.positive {
+            color: #4ecdc4;
+        }
+
+        .change-display.negative {
+            color: #ff6b6b;
+        }
+
+        .pin-btn {
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.15s ease;
+            margin-right: 4px;
+            will-change: transform, box-shadow;
+        }
+
+        .pin-btn.pinned {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+
+        .pin-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 8px rgba(254, 202, 87, 0.3);
+        }
+
+        .pin-btn.pinned:hover {
+            box-shadow: 0 4px 12px rgba(78, 205, 196, 0.4);
+        }
+
+        .pinned-row {
+            background: rgba(78, 205, 196, 0.1) !important;
+            border-left: 3px solid #4ecdc4;
+        }
+
+        .banned-row {
+            opacity: 0.4;
+            filter: grayscale(80%);
+        }
+
+        .ban-status {
+            color: #ff6b6b;
+            font-size: 10px;
+            font-weight: bold;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .banned-section-header td {
+            background-color: rgba(44, 62, 80, 0.7) !important;
+            text-align: center;
+            font-weight: bold;
+            color: #f39c12;
+            padding: 2px 0 !important;
+            border-top: 1px solid #f39c12;
+            border-bottom: 1px solid #f39c12;
+            line-height: 1.2;
+        }
+
+        .banned-section-title {
+            font-size: 1em;
+            letter-spacing: 1px;
+        }
+
+        .countdown {
+            font-weight: normal;
+            color: #f1c40f;
+        }
+
+        .pinned-row:hover {
+            background: rgba(78, 205, 196, 0.15) !important;
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        }
+
+        .ban-btn {
+            background: linear-gradient(135deg, #8395a7, #576574);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .ban-btn.is-banned {
+            background: linear-gradient(135deg, #2ecc71, #3498db);
+        }
+
+        .ban-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(131, 149, 167, 0.4);
+        }
+
+        /* 主要按钮样式 */
+        .main-buttons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .container {
+                max-width: 100%;
+                padding: 0 15px;
+            }
+
+            .header h1 {
+                font-size: 2.8em;
+            }
+
+            .nav-links {
+                gap: 15px;
+            }
+
+            .nav-links a {
+                padding: 10px 18px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 30px 0;
+                margin-bottom: 30px;
+            }
+
+            .header h1 {
+                font-size: 2.2em;
+            }
+
+            .header p {
+                font-size: 1em;
+            }
+
+            .nav-links {
+                gap: 10px;
+                margin-bottom: 30px;
+            }
+
+            .nav-links a {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+                padding: 16px;
+            }
+
+            .controls>div {
+                width: 100%;
+            }
+
+            .main-buttons {
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .reset-buttons {
+                justify-content: center;
+                padding: 10px;
+            }
+
+            .reset-buttons .btn {
+                font-size: 11px;
+                padding: 6px 10px;
+            }
+
+            .data-table-container {
+                border-radius: 16px;
+                overflow-x: auto;
+            }
+
+            .data-table {
+                min-width: 800px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 10px 8px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .nav-links a {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+
+            .controls {
+                padding: 12px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px 6px;
+                font-size: 11px;
+            }
+        }
+
+        /* 页面加载动画 */
+        .fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* 数据更新动画 */
+        .data-update {
+            animation: dataUpdate 0.5s ease;
+        }
+
+        @keyframes dataUpdate {
+            0% {
+                background: rgba(78, 205, 196, 0.2);
+            }
+
+            100% {
+                background: transparent;
+            }
+        }
+
+        /* 悬浮效果增强 */
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 页面切换动画 */
+        .page-transition {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .page-fade-out {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        .page-fade-in {
+            opacity: 1;
+            transform: translateY(0);
+            animation: pageSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes pageSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.98);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* 导航链接切换效果 */
+        .nav-links a {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #4ecdc4, #45b7d1);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-links a.active::after {
+            width: 80%;
+        }
+
+        .nav-links a:hover::after {
+            width: 60%;
+        }
+
+        /* 自动复位状态样式 */
+        .auto-reset-status {
+            margin: 15px 0;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .auto-reset-label {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        #auto-reset-info {
+            color: #a0a0a0;
+            flex: 1;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #636e72, #2d3436);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-info:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 110, 114, 0.4);
+        }
+
+        .loading,
+        .error,
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+        }
+
+        .loading h3,
+        .empty-state h3 {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 12px;
+            font-size: 1.5em;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .summary-title {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .summary-value {
+            font-size: 2em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #feca57, #ff9ff3, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .data-table {
+                font-size: 12px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px 6px;
+            }
+        }
+
+        /* 进度条弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: #2c3e50;
+            padding: 30px 40px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #4ecdc4;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 20px;
+            background: #34495e;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #4ecdc4, #45b7d1);
+            transition: width 0.3s ease;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        #progress-status {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            min-height: 20px;
+        }
+
+        /* 封禁天数选择弹窗样式 */
+        #banDurationModal .modal-content h3 {
+            color: #feca57;
+            /* 警告色 */
+        }
+
+        #banDurationModal .modal-content p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        #banDurationModal #banAccountName {
+            color: #4ecdc4;
+            /* 强调色 */
+        }
+
+        #banDurationModal #banDays {
+            border: 1px solid rgba(78, 205, 196, 0.5);
+            background-color: rgba(26, 26, 46, 0.8);
+            color: #ffffff;
+            font-size: 1em;
+            padding: 10px 15px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 200px;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #banDurationModal #banDays:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.3);
+            border-color: #4ecdc4;
+        }
+
+        #banDurationModal #banDays option {
+            background-color: #1a1a2e;
+            color: #ffffff;
+        }
+
+        #banDurationModal #banWarning {
+            color: #ff6b6b;
+            /* 红色警告 */
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 0.95em;
+            animation: pulseWarning 1.5s infinite;
+        }
+
+        @keyframes pulseWarning {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        #banDurationModal .btn {
+            min-width: 100px;
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        /* 新增样式：萌芽计划特定样式 */
+        .input-section {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: flex-end;
+            gap: 12px;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(30px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group.flex-account {
+            flex: 1.5;
+        }
+
+        .input-group.flex-notes {
+            flex: 4;
+        }
+
+        .input-group.flex-date {
+            flex: 2.2;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            height: 46px !important;
+            padding: 0 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            line-height: 44px; /* 垂直居中 */
+            display: block;
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        .input-group textarea {
+            padding: 10px 16px;
+            line-height: 24px;
+            resize: none;
+            overflow: hidden;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.2);
+        }
+
+
+        .input-group .date-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 46px;
+        }
+
+        .input-group .date-picker-container input[type="date"] {
+            flex: 1;
+            height: 100%;
+            padding: 0 12px;
+        }
+
+        .btn-today {
+            padding: 0 18px;
+            height: 46px;
+            white-space: nowrap;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-today:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .dynamic-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(30px);
+        }
+
+        .day-info {
+            text-align: center;
+            flex: 1;
+        }
+
+        .day-info .label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .day-info .value {
+            font-size: 2.5em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .day-info .sub-value {
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 5px;
+        }
+
+        .day-info .status-over {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .day-info .status-ontrack {
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+
+        .days-table-container {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(40px);
+            overflow: hidden;
+            box-shadow:
+                0 25px 50px rgba(0, 0, 0, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+        }
+
+        .days-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .days-table th {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+            color: #ffffff;
+            padding: 18px 14px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.8px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+        }
+
+        .days-table td {
+            padding: 16px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .days-table tr:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .days-table .account-cell {
+            font-weight: 700;
+            color: #4ecdc4;
+            text-align: left;
+        }
+
+        .days-table .notes-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .days-table .days-cell {
+            font-weight: 800;
+            font-size: 1.2em;
+        }
+
+        .days-table .status-cell {
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .days-table .status-ontrack {
+            color: #4ecdc4;
+        }
+
+        .days-table .status-over {
+            color: #ff6b6b;
+        }
+
+        .days-table .actions-cell {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .days-table .actions-cell button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .days-table .actions-cell .edit-btn {
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: white;
+        }
+
+        .days-table .actions-cell .delete-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .days-table .actions-cell button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state h3 {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 12px;
+            font-size: 1.5em;
+        }
+
+        .empty-state p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container fade-in">
+        <div class="header slide-in">
+            <h1>🌱 萌芽计划</h1>
+            <p>萌芽计划：以起始日为基础，动态计算第 N 天与 14 天倒计时</p>
+        </div>
+
+        <div class="nav-links fade-in">
+            <a href="/" class="hover-lift" onclick="handlePageTransition(event, '/')">📊 主面板</a>
+            <a href="/history" class="hover-lift" onclick="handlePageTransition(event, '/history')">📈 历史记录</a>
+            <a href="/groups" class="hover-lift" onclick="handlePageTransition(event, '/groups')">📂 分组管理</a>
+            <a href="/days-tracker" class="active hover-lift" onclick="handlePageTransition(event, '/days-tracker')">🌱 萌芽计划</a>
+        </div>
+
+        <div class="input-section fade-in">
+            <div class="input-group flex-account">
+                <label for="accountName">账户名称 *</label>
+                <input type="text" id="accountName" placeholder="请输入账户名称" required>
+                <div class="validation-hint" style="color: #ff6b6b; font-size: 12px; margin-top: 5px; display: none;">账户名称不能为空</div>
+            </div>
+            <div class="input-group flex-notes">
+                <label for="notes">备注信息</label>
+                <textarea id="notes" placeholder="可选的备注信息"></textarea>
+            </div>
+            <div class="input-group flex-date">
+                <label for="startDate">起始日期</label>
+                <div class="date-picker-container">
+                    <input type="date" id="startDate">
+                </div>
+            </div>
+            <div class="input-group" style="flex: 0 0 100px;">
+                <button id="setToday" class="btn-today" style="width: 100%;">设为今日</button>
+            </div>
+            <div class="input-group" style="flex: 0 0 150px;">
+                <button id="addEntry" class="btn btn-primary" style="padding: 0; width: 100%; height: 46px; font-size: 15px; letter-spacing: 1px;">添加记录</button>
+            </div>
+        </div>
+
+        <div class="dynamic-display fade-in" id="dynamicDisplay" style="display: none;">
+            <div class="day-info">
+                <div class="label">当前是第几天</div>
+                <div class="value" id="currentDay">0</div>
+                <div class="sub-value">自 <span id="displayStartDate">--</span> 起</div>
+            </div>
+            <div class="day-info">
+                <div class="label">距离第14天还有</div>
+                <div class="value" id="daysLeft">0</div>
+                <div class="sub-value">
+                    <span id="statusText" class="status-ontrack">正在追踪</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-controls fade-in" style="display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-bottom: 15px; padding: 0 5px;">
+            <button class="btn btn-primary" onclick="loadEntries()" style="height: 46px; padding: 0 20px; font-size: 14px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); box-shadow: none;">
+                <span>🔄</span> 刷新数据
+            </button>
+            <div class="input-group" style="flex-direction: row; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); padding: 0 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); height: 46px;">
+                <label style="margin-bottom: 0; white-space: nowrap; font-size: 13px; color: rgba(255,255,255,0.7);">排序方式:</label>
+                <select id="sortSelect" class="group-select" style="max-width: 200px; background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.2); height: 30px; padding: 0 10px; font-size: 13px;">
+                    <option value="daysLeft_asc">⏳ 剩余天数 (少 -> 多)</option>
+                    <option value="daysLeft_desc">⏳ 剩余天数 (多 -> 少)</option>
+                    <option value="currentDay_asc">📅 当前天数 (少 -> 多)</option>
+                    <option value="currentDay_desc">📅 当前天数 (多 -> 少)</option>
+                    <option value="name_asc">👤 账户名称 (A -> Z)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="days-table-container fade-in" id="tableContainer">
+            <div class="loading">
+                <h3>📡 正在加载数据...</h3>
+                <p>请稍候</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 提示：添加记录后，系统将自动计算天数与倒计时。超过14天会显示“已超过目标”。</p>
+        </div>
+    </div>
+
+    <!-- 编辑模态框 -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>编辑记录</h3>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label for="editAccountName">账户名称 *</label>
+                    <input type="text" id="editAccountName" required>
+                </div>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label for="editNotes">备注信息</label>
+                    <textarea id="editNotes"></textarea>
+                </div>
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <label for="editStartDate">起始日期</label>
+                    <input type="date" id="editStartDate">
+                </div>
+                <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存更改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let entries = [];
+        let currentEditAccount = null;
+        let currentSort = 'daysLeft_asc'; // 默认排序：剩余天数从少到多
+
+        // 工具函数：日期格式化
+        function formatDate(date) {
+            const d = new Date(date);
+            return d.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        }
+
+        // 计算天数差
+        function getDaysDiff(startDateStr) {
+            const start = new Date(startDateStr);
+            start.setHours(0, 0, 0, 0);
+
+            // 获取北京时间 (UTC+8)
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const beijingTime = new Date(utc + (3600000 * 8));
+
+            // 凌晨3点刷新逻辑：如果当前北京时间小于3点，则视为前一天
+            const effectiveToday = new Date(beijingTime);
+            if (beijingTime.getHours() < 3) {
+                effectiveToday.setDate(beijingTime.getDate() - 1);
+            }
+            effectiveToday.setHours(0, 0, 0, 0);
+
+            const diffTime = effectiveToday - start;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays; // 拜师当天为第0天
+        }
+
+        // 更新动态显示
+        function updateDynamicDisplay(startDateStr) {
+            if (!startDateStr) {
+                document.getElementById('dynamicDisplay').style.display = 'none';
+                return;
+            }
+            const days = getDaysDiff(startDateStr);
+            const daysLeft = Math.max(0, 14 - days);
+            const isOver = days > 14;
+
+            document.getElementById('currentDay').textContent = days;
+            document.getElementById('displayStartDate').textContent = formatDate(startDateStr);
+            document.getElementById('daysLeft').textContent = daysLeft;
+            const statusText = document.getElementById('statusText');
+            if (isOver) {
+                statusText.textContent = '已超过14天目标';
+                statusText.className = 'status-over';
+            } else {
+                statusText.textContent = daysLeft === 0 ? '今天是第14天！' : '正在追踪';
+                statusText.className = 'status-ontrack';
+            }
+            document.getElementById('dynamicDisplay').style.display = 'flex';
+        }
+
+        // 从后端加载条目
+        async function loadEntries() {
+            try {
+                const response = await fetch('/api/days-tracker-entries');
+                if (!response.ok) throw new Error('加载失败');
+                entries = await response.json();
+                console.log('Loaded entries:', entries);
+                renderTable();
+            } catch (error) {
+                console.error('加载条目失败:', error);
+                // 如果后端不支持，先使用本地存储模拟
+                const stored = localStorage.getItem('daysTrackerEntries');
+                if (stored) {
+                    entries = JSON.parse(stored);
+                    renderTable();
+                }
+            }
+        }
+
+        // 渲染表格
+        function renderTable() {
+            console.log('Rendering table', entries);
+            const container = document.getElementById('tableContainer');
+            if (entries.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📭 暂无追踪记录</h3>
+                        <p>请添加第一条记录以开始追踪</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 执行排序逻辑
+            const sortedEntries = [...entries].sort((a, b) => {
+                const [field, direction] = currentSort.split('_');
+                let valA, valB;
+
+                if (field === 'name') {
+                    valA = a.account_name;
+                    valB = b.account_name;
+                } else {
+                    const daysA = getDaysDiff(a.start_date);
+                    const daysB = getDaysDiff(b.start_date);
+                    if (field === 'currentDay') {
+                        valA = daysA;
+                        valB = daysB;
+                    } else if (field === 'daysLeft') {
+                        valA = Math.max(0, 14 - daysA);
+                        valB = Math.max(0, 14 - daysB);
+                    }
+                }
+
+                if (valA < valB) return direction === 'asc' ? -1 : 1;
+                if (valA > valB) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            let tableHTML = `
+                <table class="days-table">
+                    <thead>
+                        <tr>
+                            <th>账户名称</th>
+                            <th>备注</th>
+                            <th>起始日期</th>
+                            <th>当前天数</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            sortedEntries.forEach(entry => {
+                const days = getDaysDiff(entry.start_date);
+                const daysLeft = Math.max(0, 14 - days);
+                const isOver = days > 14;
+                const statusClass = isOver ? 'status-over' : 'status-ontrack';
+                const statusText = isOver ? '已超过目标' : (daysLeft === 0 ? '第14天' : `剩${daysLeft}天`);
+
+                tableHTML += `
+                    <tr data-account="${entry.account_name}">
+                        <td class="account-cell">${entry.account_name}</td>
+                        <td class="notes-cell" title="${entry.notes}">${entry.notes || '-'}</td>
+                        <td>${formatDate(entry.start_date)}</td>
+                        <td class="days-cell">第 ${days} 天</td>
+                        <td class="status-cell ${statusClass}">${statusText}</td>
+                        <td class="actions-cell">
+                            <button class="edit-btn" onclick="openEditModal('${entry.account_name}')">编辑</button>
+                            <button class="delete-btn" onclick="deleteEntry('${entry.account_name}')">删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        // 添加新条目
+        async function addEntry() {
+            const accountName = document.getElementById('accountName').value.trim();
+            const notes = document.getElementById('notes').value.trim();
+            const startDate = document.getElementById('startDate').value;
+
+            if (!accountName) {
+                const hint = document.querySelector('#accountName + .validation-hint');
+                hint.style.display = 'block';
+                return;
+            }
+
+            const entry = {
+                account_name: accountName,
+                notes: notes,
+                start_date: startDate || new Date().toISOString().split('T')[0]
+            };
+
+            try {
+                const response = await fetch('/api/days-tracker-entries', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(entry)
+                });
+                if (!response.ok) throw new Error('保存失败');
+                await loadEntries();
+            } catch (error) {
+                console.error('保存条目失败，使用本地存储:', error);
+                // 模拟保存到本地存储
+                entry.id = Date.now();
+                entries.push(entry);
+                localStorage.setItem('daysTrackerEntries', JSON.stringify(entries));
+                renderTable();
+            }
+
+            // 重置表单
+            document.getElementById('accountName').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('startDate').value = '';
+            document.querySelector('#accountName + .validation-hint').style.display = 'none';
+            updateDynamicDisplay(entry.start_date);
+        }
+
+        // 删除条目
+        async function deleteEntry(accountName) {
+            if (!confirm('确定要删除这条记录吗？')) return;
+            try {
+                const response = await fetch(`/api/days-tracker-entries/${accountName}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error('删除失败');
+                await loadEntries();
+            } catch (error) {
+                console.error('删除条目失败，使用本地存储:', error);
+                entries = entries.filter(e => e.account_name !== accountName);
+                localStorage.setItem('daysTrackerEntries', JSON.stringify(entries));
+                renderTable();
+            }
+        }
+
+        // 打开编辑模态框
+        function openEditModal(accountName) {
+            const entry = entries.find(e => e.account_name === accountName);
+            if (!entry) return;
+            currentEditAccount = accountName;
+            document.getElementById('editId').value = accountName;
+            document.getElementById('editAccountName').value = entry.account_name;
+            document.getElementById('editNotes').value = entry.notes || '';
+            document.getElementById('editStartDate').value = entry.start_date;
+            // 账户名称不可编辑
+            document.getElementById('editAccountName').setAttribute('readonly', true);
+            document.getElementById('editModal').classList.add('visible');
+        }
+
+        // 关闭编辑模态框
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('visible');
+            document.getElementById('editAccountName').removeAttribute('readonly');
+        }
+
+        // 保存编辑
+        async function saveEdit(event) {
+            event.preventDefault();
+            const accountName = currentEditAccount;
+            const notes = document.getElementById('editNotes').value.trim();
+            const startDate = document.getElementById('editStartDate').value;
+
+            if (!accountName) {
+                alert('账户名称不能为空');
+                return;
+            }
+
+            const updated = {
+                account_name: accountName,
+                notes: notes,
+                start_date: startDate
+            };
+
+            try {
+                const response = await fetch('/api/days-tracker-entries', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updated)
+                });
+                if (!response.ok) throw new Error('更新失败');
+                await loadEntries();
+                closeEditModal();
+            } catch (error) {
+                console.error('更新条目失败，使用本地存储:', error);
+                const index = entries.findIndex(e => e.account_name === accountName);
+                if (index !== -1) {
+                    entries[index] = { ...entries[index], ...updated };
+                    localStorage.setItem('daysTrackerEntries', JSON.stringify(entries));
+                    renderTable();
+                    closeEditModal();
+                }
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 设置今日日期为默认值
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('editStartDate').value = today;
+
+            // 事件监听
+            document.getElementById('setToday').addEventListener('click', () => {
+                document.getElementById('startDate').value = today;
+                updateDynamicDisplay(today);
+            });
+            document.getElementById('addEntry').addEventListener('click', addEntry);
+            document.getElementById('editForm').addEventListener('submit', saveEdit);
+            document.getElementById('accountName').addEventListener('input', function () {
+                this.nextElementSibling.style.display = 'none';
+            });
+            document.getElementById('startDate').addEventListener('change', function () {
+                updateDynamicDisplay(this.value);
+            });
+
+            // 排序切换监听
+            document.getElementById('sortSelect').addEventListener('change', function () {
+                currentSort = this.value;
+                renderTable();
+            });
+
+            // 加载数据
+            loadEntries();
+
+            // 初始动态显示
+            updateDynamicDisplay(today);
+        });
+
+        // 页面切换（简化版）
+        function handlePageTransition(event, url) {
+            event.preventDefault();
+            window.location.href = url;
+        }
+    </script>
+</body>
+
+</html>

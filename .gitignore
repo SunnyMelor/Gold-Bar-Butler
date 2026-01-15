@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Database
+*.db
+*.db-journal
+
+# Logs
+logs/
+*.log
+server_err.txt
+server_out.txt
+
+# Project Specific
+downloads/
+screenshots/
+.joycode/
+
+# OS
+.DS_Store
+Thumbs.db
