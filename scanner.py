@@ -196,7 +196,7 @@ class GoldScanner:
                         "scan_profiles": [
                             {
                                 "name": "默认",
-                                "pixel_check": null,
+                                "pixel_check": None,
                                 "gold_region": [850, 850, 150, 50]
                             }
                         ]
