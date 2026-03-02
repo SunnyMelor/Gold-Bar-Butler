@@ -265,15 +265,23 @@ class GoldScanner:
         if corrected_text != text:
             logger.info(f"修正后文本: '{corrected_text}'")
 
-        # 移除所有非数字字符（保留数字和“万”字）
+        # 应用万字符纠正
+        corrected_text = self._correct_wan_character(corrected_text)
+
+        # 纠正将数字末尾的5误识别为万的情况
+        corrected_text = self._correct_false_wan(corrected_text)
+
+        # 移除所有非数字字符（保留数字和"万"字）
         cleaned_text = re.sub(r'[^\d万]', '', corrected_text)
         
-        # 处理“万”单位
+        # 处理"万"字符 - 根据用户要求，当出现"万"时，只提取数字部分，不乘以10000
         if '万' in cleaned_text:
             try:
+                # 提取"万"前面的数字部分（支持整数和小数）
                 num_part = re.findall(r'(\d+\.?\d*)万', cleaned_text)
                 if num_part:
-                    return int(float(num_part[0]) * 10000)
+                    # 直接返回数字的整数部分，不乘以10000
+                    return int(float(num_part[0]))
             except:
                 pass
         
@@ -305,6 +313,61 @@ class GoldScanner:
             logger.error(f"无法转换为整数: '{longest_num}'")
             return None
 
+
+    def _correct_wan_character(self, text, confidence_scores=None):
+        """
+        纠正OCR中'万'被误识别为'5'的错误。
+        已根据用户要求禁用，避免将数字末尾的5误改为万。
+        """
+        # 暂时禁用纠正，直接返回原文本
+        return text
+
+    def _correct_false_wan(self, text):
+        """
+        纠正OCR中将数字末尾的'5'误识别为'万'的错误。
+        根据用户要求，当文本中出现'万'时，基本保留原样，只在极少数情况下纠正。
+        
+        规则（简化版）：
+        1. 如果'万'后面紧跟单位字符（元、人民币等），保留原样
+        2. 如果数字长度为1，保留原样（如"5万"）
+        3. 如果数字以0结尾，保留原样（如"100万"）
+        4. 否则，基本保留原样（根据用户要求）
+        """
+        import re
+        # 单位字符集合
+        unit_chars = set('元人民币人币万千')
+        
+        # 模式：数字后接'万'
+        pattern = re.compile(r'(\d+)万')
+        
+        # 手动遍历所有匹配
+        new_text = ''
+        last_end = 0
+        for match in pattern.finditer(text):
+            start, end = match.start(), match.end()
+            new_text += text[last_end:start]
+            num = match.group(1)
+            # 检查'万'后面紧跟的字符
+            next_char = text[end] if end < len(text) else ''
+            
+            # 判断是否保留原样
+            keep_original = True  # 默认保留原样
+            
+            # 只有在非常明确的情况下才纠正
+            # 例如：数字不以0结尾，后面没有单位，且数字长度>1
+            # 但根据用户要求，基本不纠正
+            if (next_char not in unit_chars and
+                len(num) > 1 and
+                not num.endswith('0') and
+                not next_char.isdigit()):  # 后面不是数字
+                # 可能是错误的万，但根据用户要求，还是保留原样
+                # 这里可以添加更严格的判断条件
+                pass
+            
+            new_text += match.group(0)  # 总是保留原样
+            last_end = end
+        new_text += text[last_end:]
+        return new_text
 
     def extract_number_from_easyocr_result(self, results):
         """从EasyOCR结果中提取数字"""
@@ -384,10 +447,10 @@ class GoldScanner:
             # 图像预处理
             processed_image = self.preprocess_image(screenshot)
             
-            # 使用 allowlist 限制只识别数字，大幅提升数字识别精度
+            # 使用 allowlist 限制只识别数字和“万”字符，大幅提升数字识别精度
             # detail=0 表示只返回文本和置信度，不返回位置框（简化结果）
             try:
-                results = self.reader.readtext(processed_image, allowlist='0123456789', detail=0)
+                results = self.reader.readtext(processed_image, allowlist='0123456789万', detail=0)
             except Exception as e:
                 logger.warning(f"allowlist 参数可能不被支持，回退到全字符识别: {e}")
                 results = self.reader.readtext(processed_image, detail=0)

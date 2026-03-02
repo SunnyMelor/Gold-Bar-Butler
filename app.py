@@ -394,21 +394,58 @@ def get_dashboard_data():
 
 @app.route('/api/history-data')
 def get_history_data():
-    """获取历史数据"""
+    """获取历史数据 - 支持分页与筛选"""
     try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        account_name = request.args.get('account_name')
+        date_filter = request.args.get('date')  # Format: YYYY-MM-DD
+
         db = get_db()
         cursor = db.cursor()
 
-        cursor.execute('SELECT account_name, quantity, timestamp FROM records ORDER BY timestamp DESC')
+        # 构建查询
+        query = 'SELECT account_name, quantity, timestamp FROM records'
+        params = []
+        conditions = []
+
+        if account_name:
+            conditions.append('account_name = ?')
+            params.append(account_name)
+        
+        if date_filter:
+            # 假设 timestamp 格式为 "YYYY-MM-DD HH:MM:SS"
+            conditions.append('timestamp LIKE ?')
+            params.append(f'{date_filter}%')
+
+        if conditions:
+            query += ' WHERE ' + ' AND '.join(conditions)
+
+        # 获取总条数
+        count_query = f"SELECT COUNT(*) FROM ({query})"
+        cursor.execute(count_query, params)
+        total_records = cursor.fetchone()[0]
+
+        # 添加排序和分页
+        query += ' ORDER BY timestamp DESC LIMIT ? OFFSET ?'
+        params.extend([per_page, (page - 1) * per_page])
+
+        cursor.execute(query, params)
         records = cursor.fetchall()
 
-        result = [{
+        data = [{
             'account_name': r['account_name'],
             'quantity': r['quantity'],
             'timestamp': r['timestamp']
         } for r in records]
 
-        return jsonify(result)
+        return jsonify({
+            'data': data,
+            'total': total_records,
+            'page': page,
+            'per_page': per_page,
+            'has_next': (page * per_page) < total_records
+        })
 
     except Exception as e:
         logger.error(f"获取历史数据时出错: {str(e)}")

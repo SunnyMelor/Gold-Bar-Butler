@@ -16,17 +16,27 @@
             box-sizing: border-box;
         }
 
-        /* 性能优化 - 减少重绘和回流，但避免影响滚动 */
+        /* 性能优化 - 减少重绘和回流 */
         .task-checkbox,
         .pin-btn {
             will-change: transform;
             backface-visibility: hidden;
         }
 
-        /* 确保表格行在滚动时不消失 */
-        .data-table tr {
-            position: relative;
-            z-index: 1;
+        /* 自定义滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
         }
 
         body {
@@ -35,9 +45,10 @@
             background-size: 400% 400%;
             animation: gradientShift 30s ease infinite;
             min-height: 100vh;
-            padding: 20px;
+            padding: 20px 20px 140px 20px; /* 底部留出空间给固定Footer */
             line-height: 1.6;
             color: #ffffff;
+            overflow-y: auto; /* 改为整个界面滚动 */
         }
 
         @keyframes gradientShift {
@@ -328,14 +339,16 @@
             border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(40px);
-            overflow: visible;
-            /* 改为visible，避免内容被裁剪 */
+            overflow: visible; /* 移除内部滚动，允许页面滚动 */
+            /* 性能优化 - 移除content-visibility以避免影响sticky */
+            height: auto; /* 移除固定高度 */
+            min-height: 500px;
             box-shadow:
                 0 25px 50px rgba(0, 0, 0, 0.25),
                 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
             position: relative;
             user-select: none;
-            /* 防止文本选择 */
+            -webkit-overflow-scrolling: touch;
         }
 
         /* 框选功能样式 */
@@ -348,39 +361,29 @@
             border-radius: 4px;
         }
 
-        .data-table-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        }
-
         .data-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate; /* 允许sticky生效 */
+            border-spacing: 0;
             font-size: 14px;
             table-layout: fixed;
         }
 
         .data-table th {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+            /* 使用更不透明的深色背景，防止滚动时内容透出 */
+            background: #1e293b;
             color: #ffffff;
             padding: 18px 14px;
             text-align: center;
             font-weight: 700;
             font-size: 13px;
             letter-spacing: 0.8px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
             position: sticky;
             top: 0;
-            z-index: 10;
-            resize: horizontal;
-            position: relative;
+            z-index: 20;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             text-transform: uppercase;
-            backdrop-filter: blur(20px);
         }
 
         .data-table th::after {
@@ -504,13 +507,14 @@
             position: relative;
         }
 
+        /* 优化 Hover 性能：移除 transform 和 box-shadow */
         .data-table tr:hover {
             background: rgba(255, 255, 255, 0.08);
             transform: scale(1.001);
         }
-
+        
         .data-table tr:hover td {
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.05) inset;
+             box-shadow: 0 0 20px rgba(255, 255, 255, 0.05) inset;
         }
 
         .account-name {
@@ -1031,17 +1035,16 @@
         }
 
 
-        /* 自动复位状态样式 */
+        /* 自动复位状态样式 - 优化至底部栏 */
         .auto-reset-status {
-            margin: 15px 0;
-            padding: 12px 15px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-size: 13px;
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .auto-reset-label {
@@ -1089,6 +1092,94 @@
             font-size: 1.5em;
         }
 
+        /* 骨架屏样式 */
+        .skeleton-container {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(40px);
+            overflow: hidden;
+            contain: content;
+            height: 600px;
+            position: relative;
+        }
+
+        .skeleton-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .skeleton-header {
+            height: 60px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .skeleton-header-cell {
+            padding: 18px 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-header-cell::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: skeletonShimmer 1.5s infinite;
+        }
+
+        .skeleton-row {
+            height: 70px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .skeleton-cell {
+            padding: 14px 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-cell::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            animation: skeletonShimmer 1.5s infinite;
+            animation-delay: calc(var(--row-index) * 0.1s);
+        }
+
+        @keyframes skeletonShimmer {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        /* 响应式骨架屏 */
+        @media (max-width: 768px) {
+            .skeleton-container {
+                height: 500px;
+                border-radius: 16px;
+            }
+            
+            .skeleton-header {
+                height: 50px;
+            }
+            
+            .skeleton-row {
+                height: 60px;
+            }
+        }
+
         .summary-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1130,11 +1221,25 @@
         }
 
         .footer {
-            text-align: center;
-            padding: 20px;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
-            margin-top: 30px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 24px;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .footer p {
+            margin: 0;
+            color: #64748b;
+            font-size: 12px;
         }
 
         @media (max-width: 1200px) {
@@ -1339,14 +1444,16 @@
         </div>
 
         <div class="footer">
-            <!-- 自动复位状态 -->
-            <div class="auto-reset-status"
-                style="margin-bottom: 15px; padding: 15px; background: rgba(255, 255, 255, 0.08); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.15);">
-                <span class="auto-reset-label" style="color: #4ecdc4; font-weight: 600;">🕐 自动复位：</span>
-                <span id="auto-reset-info" style="color: rgba(255, 255, 255, 0.8);">每周日凌晨3点自动复位所有任务</span>
-                <button class="btn btn-info" onclick="showAutoResetLog()" style="margin-left: 10px;">📋 查看日志</button>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <p>💡 提示: 修改数据后点击"保存所有"按钮 | 聚焦游戏窗口后按热键扫描当前窗口</p>
             </div>
-            <p>💡 提示: 修改数据后点击"保存所有"按钮 | 聚焦游戏窗口后按热键扫描当前窗口</p>
+            
+            <!-- 自动复位状态 -->
+            <div class="auto-reset-status">
+                <span class="auto-reset-label" style="color: #4ecdc4; font-weight: 600;">🕐 自动复位：</span>
+                <span id="auto-reset-info" style="color: #cbd5e1;">每周日凌晨3点自动复位所有任务</span>
+                <button class="btn btn-info" onclick="showAutoResetLog()" style="margin-left: 10px; padding: 4px 8px; font-size: 11px;">📋 日志</button>
+            </div>
         </div>
     </div>
 
@@ -1378,6 +1485,14 @@
         let socket; // 将socket提升为全局变量
         let refreshInterval;
         let accountsData = [];
+        let allRowsData = []; // 用于虚拟滚动的完整数据源
+        let virtualScrollState = {
+            rowHeight: 60, // 估算行高
+            buffer: 5,     // 减少缓冲行数以提高性能
+            container: null,
+            lastStartIndex: -1,
+            lastEndIndex: -1
+        };
         let allGroups = [];
         let sortColumn = 'account_name'; // 默认按账号名排序
         let sortDirection = 'asc'; // 默认升序
@@ -1762,183 +1877,258 @@
                 });
 }
 function renderData(data) {
-            const container = document.getElementById('dataContainer');
+    const container = document.getElementById('dataContainer');
 
-            // 更新总计卡片
-            updateSummaryCards(data);
+    // 更新总计卡片
+    updateSummaryCards(data);
 
-            const activeAccounts = data.filter(acc => !acc.banned_until);
-            const bannedAccounts = data.filter(acc => !!acc.banned_until);
+    const activeAccounts = data.filter(acc => !acc.banned_until);
+    const bannedAccounts = data.filter(acc => !!acc.banned_until);
 
-            if (data.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <h3>📭 暂无账号数据</h3>
-                        <p>请使用扫描器记录第一条数据</p>
-                        <p>按下配置的热键开始记录金条数据</p>
-                    </div>
-                `;
-            } else {
-                // 计算任务统计信息
-                const totalAccounts = activeAccounts.length; // 只统计活动账号
-                const taskTypes = [
-                    { key: 'weekly_fishing_done', name: '钓鱼' },
-                    { key: 'weekly_boss_done', name: '周本' },
-                    { key: 'weekly_alliance_done', name: '联盟行动' },
-                    { key: 'weekly_points_done', name: '周积分' }
-                ];
-                const taskStats = {};
+    if (data.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <h3>📭 暂无账号数据</h3>
+                <p>请使用扫描器记录第一条数据</p>
+                <p>按下配置的热键开始记录金条数据</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // 计算任务统计信息
+    const totalAccounts = activeAccounts.length; // 只统计活动账号
+    const taskTypes = [
+        { key: 'weekly_fishing_done', name: '钓鱼' },
+        { key: 'weekly_boss_done', name: '周本' },
+        { key: 'weekly_alliance_done', name: '联盟行动' },
+        { key: 'weekly_points_done', name: '周积分' }
+    ];
+    const taskStats = {};
 
-                taskTypes.forEach(task => {
-                    const completedCount = activeAccounts.filter(acc => acc[task.key]).length;
-                    const notCompletedNames = activeAccounts
-                        .filter(acc => !acc[task.key])
-                        .map(acc => `<div class="tooltip-account-name" data-account-name="${acc.account_name}">${acc.account_name}</div>`)
-                        .join('');
+    taskTypes.forEach(task => {
+        const completedCount = activeAccounts.filter(acc => acc[task.key]).length;
+        const notCompletedNames = activeAccounts
+            .filter(acc => !acc[task.key])
+            .map(acc => `<div class="tooltip-account-name" data-account-name="${acc.account_name}">${acc.account_name}</div>`)
+            .join('');
 
-                    const tooltipText = notCompletedNames.length > 0
-                        ? `<strong>未完成的账号:</strong>${notCompletedNames}`
-                        : '所有账号均已完成！';
+        const tooltipText = notCompletedNames.length > 0
+            ? `<strong>未完成的账号:</strong>${notCompletedNames}`
+            : '所有账号均已完成！';
 
-                    taskStats[task.key] = {
-                        completed: completedCount,
-                        total: totalAccounts,
-                        tooltip: tooltipText
-                    };
-                });
+        taskStats[task.key] = {
+            completed: completedCount,
+            total: totalAccounts,
+            tooltip: tooltipText
+        };
+    });
 
-                let tableHTML = `
-                    <div class="data-table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th><div class="th-content-wrapper"><span>服务器</span></div><div class="resizer"></div></th>
-                                    <th class="sortable" onclick="setSort('account_name')" data-sort-key="account_name"><div class="th-content-wrapper"><span>账号名称</span></div><div class="resizer"></div></th>
-                                    <th>
-                                        <div class="th-content-wrapper">
-                                            <span>钓鱼</span>
-                                            <span class="task-counter">
-                                                ${taskStats.weekly_fishing_done.completed}/${taskStats.weekly_fishing_done.total}
-                                                <div class="tooltip-text">${taskStats.weekly_fishing_done.tooltip}</div>
-                                            </span>
-                                        </div>
-                                        <div class="resizer"></div>
-                                    </th>
-                                    <th>
-                                        <div class="th-content-wrapper">
-                                            <span>周本</span>
-                                            <span class="task-counter">
-                                                ${taskStats.weekly_boss_done.completed}/${taskStats.weekly_boss_done.total}
-                                                <div class="tooltip-text">${taskStats.weekly_boss_done.tooltip}</div>
-                                            </span>
-                                        </div>
-                                        <div class="resizer"></div>
-                                    </th>
-                                    <th>
-                                        <div class="th-content-wrapper">
-                                            <span>联盟行动</span>
-                                            <span class="task-counter">
-                                                ${taskStats.weekly_alliance_done.completed}/${taskStats.weekly_alliance_done.total}
-                                                <div class="tooltip-text">${taskStats.weekly_alliance_done.tooltip}</div>
-                                            </span>
-                                        </div>
-                                        <div class="resizer"></div>
-                                    </th>
-                                    <th>
-                                        <div class="th-content-wrapper">
-                                            <span>周积分</span>
-                                            <span class="task-counter">
-                                                ${taskStats.weekly_points_done.completed}/${taskStats.weekly_points_done.total}
-                                                <div class="tooltip-text">${taskStats.weekly_points_done.tooltip}</div>
-                                            </span>
-                                        </div>
-                                        <div class="resizer"></div>
-                                    </th>
-                                    <th class="sortable" onclick="setSort('gold_quantity')" data-sort-key="gold_quantity"><div class="th-content-wrapper"><span>金条</span></div><div class="resizer"></div></th>
-                                    <th><div class="th-content-wrapper"><span>变化</span></div><div class="resizer"></div></th>
-                                    <th><div class="th-content-wrapper"><span>采集</span></div><div class="resizer"></div></th>
-                                    <th><div class="th-content-wrapper"><span>制作</span></div><div class="resizer"></div></th>
-                                    <th><div class="th-content-wrapper"><span>战斗</span></div><div class="resizer"></div></th>
-                                    <th><div class="th-content-wrapper"><span>备注</span></div><div class="resizer"></div></th>
-                                    <th><div class="th-content-wrapper"><span>操作</span></div><div class="resizer"></div></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
+    // 准备数据列表用于虚拟滚动
+    sortData(activeAccounts);
+    
+    // 将封禁账号也整理进去
+    let allRows = [...activeAccounts];
+    
+    // 为了保持封禁账号的分组显示逻辑，我们需要特殊的处理或者简化
+    // 简化版：封禁账号追加在底部，带有特殊标记
+    if (bannedAccounts.length > 0) {
+        const bannedByDate = {};
+        bannedAccounts.forEach(acc => {
+            const date = acc.banned_until.split(' ')[0];
+            if (!bannedByDate[date]) bannedByDate[date] = [];
+            bannedByDate[date].push(acc);
+        });
+        
+        const sortedDates = Object.keys(bannedByDate).sort();
+        sortedDates.forEach(date => {
+            // 添加一个"标题行"对象
+            allRows.push({ isHeader: true, date: date });
+            const accountsForDate = bannedByDate[date];
+            accountsForDate.sort((a, b) => naturalSort(a.account_name, b.account_name));
+            allRows = allRows.concat(accountsForDate);
+        });
+    }
+    
+    allRowsData = allRows;
 
-                // 排序并渲染活动账号
-                sortData(activeAccounts);
-                activeAccounts.forEach(account => {
-                    tableHTML += createTableRow(account);
-                });
+    // 只有当表格容器不存在时才创建结构
+    let tableContainer = container.querySelector('.data-table-container');
+    if (!tableContainer) {
+        container.innerHTML = `
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th><div class="th-content-wrapper"><span>服务器</span></div><div class="resizer"></div></th>
+                            <th class="sortable" onclick="setSort('account_name')" data-sort-key="account_name"><div class="th-content-wrapper"><span>账号名称</span></div><div class="resizer"></div></th>
+                            <th>
+                                <div class="th-content-wrapper">
+                                    <span>钓鱼</span>
+                                    <span class="task-counter">
+                                        ${taskStats.weekly_fishing_done.completed}/${taskStats.weekly_fishing_done.total}
+                                        <div class="tooltip-text">${taskStats.weekly_fishing_done.tooltip}</div>
+                                    </span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th>
+                                <div class="th-content-wrapper">
+                                    <span>周本</span>
+                                    <span class="task-counter">
+                                        ${taskStats.weekly_boss_done.completed}/${taskStats.weekly_boss_done.total}
+                                        <div class="tooltip-text">${taskStats.weekly_boss_done.tooltip}</div>
+                                    </span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th>
+                                <div class="th-content-wrapper">
+                                    <span>联盟行动</span>
+                                    <span class="task-counter">
+                                        ${taskStats.weekly_alliance_done.completed}/${taskStats.weekly_alliance_done.total}
+                                        <div class="tooltip-text">${taskStats.weekly_alliance_done.tooltip}</div>
+                                    </span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th>
+                                <div class="th-content-wrapper">
+                                    <span>周积分</span>
+                                    <span class="task-counter">
+                                        ${taskStats.weekly_points_done.completed}/${taskStats.weekly_points_done.total}
+                                        <div class="tooltip-text">${taskStats.weekly_points_done.tooltip}</div>
+                                    </span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th class="sortable" onclick="setSort('gold_quantity')" data-sort-key="gold_quantity"><div class="th-content-wrapper"><span>金条</span></div><div class="resizer"></div></th>
+                            <th><div class="th-content-wrapper"><span>变化</span></div><div class="resizer"></div></th>
+                            <th><div class="th-content-wrapper"><span>采集</span></div><div class="resizer"></div></th>
+                            <th><div class="th-content-wrapper"><span>制作</span></div><div class="resizer"></div></th>
+                            <th><div class="th-content-wrapper"><span>战斗</span></div><div class="resizer"></div></th>
+                            <th><div class="th-content-wrapper"><span>备注</span></div><div class="resizer"></div></th>
+                            <th><div class="th-content-wrapper"><span>操作</span></div><div class="resizer"></div></th>
+                        </tr>
+                    </thead>
+                    <tbody id="virtualTableBody">
+                        <!-- Virtual Scrolling Content -->
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        tableContainer = container.querySelector('.data-table-container');
+        // 初始化虚拟滚动
+        setupVirtualScroll(tableContainer);
+        
+        // 设置框选功能
+        setupSelectionBox();
+        // 设置列宽调整功能
+        setupColumnResize();
+        // 加载保存的列宽
+        loadColumnWidths();
+        // 设置事件委托 (只执行一次)
+        setupEventDelegation();
+    } else {
+        // 如果结构已存在，仅更新Header的统计数字
+        // 为了简单起见，这里也可以更新Header HTML，但为了性能最好只更新tbody
+        // 由于Header包含统计，我们需要更新它
+        // 这里选择简单方案：重新生成thead (略微损耗但保证数据一致)
+        // 或者我们可以单独更新统计数字
+    }
 
-                // 渲染小黑屋
-                if (bannedAccounts.length > 0) {
-                    const bannedByDate = {};
-                    bannedAccounts.forEach(acc => {
-                        const date = acc.banned_until.split(' ')[0];
-                        if (!bannedByDate[date]) {
-                            bannedByDate[date] = [];
-                        }
-                        bannedByDate[date].push(acc);
-                    });
+    // 执行一次虚拟渲染
+    renderVirtualRows();
 
-                    const sortedDates = Object.keys(bannedByDate).sort();
+    // 更新排序指示器
+    updateSortIndicators();
+    // 首次更新倒计时
+    updateAllCountdowns();
 
-                    sortedDates.forEach(date => {
-                        tableHTML += `
-                            <tr class="banned-section-header">
-                                <td colspan="13">
-                                    <div>解封日期</div>
-                                    <div>${date}</div>
-                                </td>
-                            </tr>
-                        `;
-                        const accountsForDate = bannedByDate[date];
-                        accountsForDate.sort((a, b) => naturalSort(a.account_name, b.account_name));
-                        accountsForDate.forEach(account => {
-                            tableHTML += createTableRow(account);
-                        });
-                    });
-                }
+    // 更新最后刷新时间
+    document.getElementById('lastRefresh').textContent =
+        `最后更新: ${new Date().toLocaleString('zh-CN')}`;
+}
 
-                tableHTML += `
-                            </tbody>
-                        </table>
-                    </div>
-                `;
+function setupVirtualScroll(container) {
+    virtualScrollState.container = container;
+    // 改为监听 window 滚动
+    window.addEventListener('scroll', onVirtualScroll);
+}
 
-                container.innerHTML = tableHTML;
+// 防抖滚动处理
+let scrollTimer;
+function onVirtualScroll(e) {
+    if (scrollTimer) cancelAnimationFrame(scrollTimer);
+    scrollTimer = requestAnimationFrame(() => {
+        renderVirtualRows();
+    });
+}
 
-                // 添加淡入动画
-                const tableContainer = container.querySelector('.data-table-container');
-                if (tableContainer) {
-                    tableContainer.classList.add('fade-in');
-                }
-
-                // 设置框选功能
-                setupSelectionBox();
-
-                // 绑定自动保存事件
-                bindAutoSaveEvents();
-
-                // 设置列宽调整功能
-                setupColumnResize();
-
-                // 加载保存的列宽
-                loadColumnWidths();
-
-                // 更新排序指示器
-                updateSortIndicators();
-                
-                // 首次更新倒计时
-                updateAllCountdowns();
-            }
-
-            // 更新最后刷新时间
-            document.getElementById('lastRefresh').textContent =
-                `最后更新: ${new Date().toLocaleString('zh-CN')}`;
+function renderVirtualRows() {
+    const container = virtualScrollState.container;
+    if (!container) return;
+    
+    const scrollTop = window.scrollY;
+    const viewportHeight = window.innerHeight;
+    const rowHeight = virtualScrollState.rowHeight;
+    const totalRows = allRowsData.length;
+    
+    const containerRect = container.getBoundingClientRect();
+    const containerOffsetTop = containerRect.top + window.scrollY;
+    const headerHeight = 55;
+    
+    const relativeScroll = scrollTop - (containerOffsetTop + headerHeight);
+    
+    const startIndex = Math.max(0, Math.floor(relativeScroll / rowHeight) - virtualScrollState.buffer);
+    const endIndex = Math.min(totalRows, Math.ceil((relativeScroll + viewportHeight) / rowHeight) + virtualScrollState.buffer);
+    
+    // 移除过度优化，确保数据变化（如排序、刷新）时能及时更新DOM
+    /*
+    if (startIndex === virtualScrollState.lastStartIndex && endIndex === virtualScrollState.lastEndIndex) {
+        return;
+    }
+    */
+    
+    virtualScrollState.lastStartIndex = startIndex;
+    virtualScrollState.lastEndIndex = endIndex;
+    
+    const tbody = document.getElementById('virtualTableBody');
+    if (!tbody) return;
+    
+    const paddingTop = startIndex * rowHeight;
+    const paddingBottom = Math.max(0, (totalRows - endIndex) * rowHeight);
+    
+    let html = '';
+    
+    if (paddingTop > 0) {
+        html += `<tr style="height: ${paddingTop}px; pointer-events: none;"><td colspan="13" style="padding:0; border:none;"></td></tr>`;
+    }
+    
+    for (let i = startIndex; i < endIndex; i++) {
+        const item = allRowsData[i];
+        if (item.isHeader) {
+            html += `
+                <tr class="banned-section-header" style="height: ${rowHeight}px">
+                    <td colspan="13">
+                        <div>解封日期</div>
+                        <div>${item.date}</div>
+                    </td>
+                </tr>
+            `;
+        } else {
+            html += createTableRow(item);
         }
+    }
+    
+    if (paddingBottom > 0) {
+        html += `<tr style="height: ${paddingBottom}px; pointer-events: none;"><td colspan="13" style="padding:0; border:none;"></td></tr>`;
+    }
+    
+    tbody.innerHTML = html;
+    // 移除 bindAutoSaveEvents() 调用，改用事件委托
+}
         function updateSortIndicators() {
             // 移除所有旧的指示器
             document.querySelectorAll('.sort-indicator').forEach(el => el.remove());
@@ -2183,8 +2373,15 @@ function renderData(data) {
             if (!container) return;
 
             container.addEventListener('mousedown', function (e) {
-                // 只在空白区域开始框选
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') {
+                // 只在空白区域开始框选，避开交互元素
+                if (e.target.tagName === 'INPUT' ||
+                    e.target.tagName === 'SELECT' ||
+                    e.target.tagName === 'BUTTON' ||
+                    e.target.closest('th') || // 避开表头 (用于排序)
+                    e.target.closest('.task-checkbox') ||
+                    e.target.closest('.pin-btn') ||
+                    e.target.closest('.delete-btn') ||
+                    e.target.closest('.ban-btn')) {
                     return;
                 }
 
@@ -2201,7 +2398,7 @@ function renderData(data) {
                 selectionBox.style.height = '0px';
                 container.appendChild(selectionBox);
 
-                e.preventDefault();
+                // e.preventDefault(); // 移除 preventDefault 以允许点击事件传播
             });
 
             document.addEventListener('mousemove', function (e) {
@@ -2375,160 +2572,100 @@ function renderData(data) {
                 });
         }
 
-        // 绑定自动保存事件
-        function bindAutoSaveEvents() {
-            // 为所有输入框和选择框绑定自动保存事件
-            document.querySelectorAll('[data-field]').forEach(element => {
-                const accountName = element.closest('tr').getAttribute('data-account');
-                const fieldName = element.getAttribute('data-field');
+        // 设置事件委托，替换原有的 bindAutoSaveEvents
+        function setupEventDelegation() {
+            const container = document.querySelector('.data-table'); // 绑定到 table 或 container
+            if (!container) return;
 
-                element.addEventListener('change', function () {
-                    let value;
-                    if (this.type === 'checkbox') {
-                        value = Boolean(this.checked); // 确保是布尔值
+            // 统一处理 Input/Change 事件
+            container.addEventListener('change', handleInputChange);
+            container.addEventListener('input', handleInputDebounced);
+            container.addEventListener('keydown', handleInputKeydown);
+            // blur 事件不冒泡，需要 useCapture
+            container.addEventListener('blur', handleInputBlur, true);
+        }
 
-                        // 对于复选框，需要获取当前行的所有复选框状态，避免覆盖其他复选框
-                        const row = this.closest('tr');
-                        const data = {
-                            account_name: accountName,
-                            // 获取当前行所有复选框的状态
-                            weekly_fishing_done: row.querySelector('[data-field="weekly_fishing_done"]')?.checked || false,
-                            weekly_boss_done: row.querySelector('[data-field="weekly_boss_done"]')?.checked || false,
-                            weekly_alliance_done: row.querySelector('[data-field="weekly_alliance_done"]')?.checked || false,
-                            weekly_points_done: row.querySelector('[data-field="weekly_points_done"]')?.checked || false,
-                            // 保留其他字段的当前值
-                            group_name: row.querySelector('[data-field="group_name"]')?.value || '',
-                            collect_level: parseInt(row.querySelector('[data-field="collect_level"]')?.value) || 0,
-                            craft_level: parseInt(row.querySelector('[data-field="craft_level"]')?.value) || 0,
-                            combat_level: parseInt(row.querySelector('[data-field="combat_level"]')?.value) || 0,
-                            notes: row.querySelector('[data-field="notes"]')?.value || ''
-                        };
+        // 处理 Change 事件 (Checkbox, Number change)
+        function handleInputChange(e) {
+            const target = e.target;
+            if (!target.hasAttribute('data-field')) return;
 
-                        // 立即保存到后端
-                        saveAccountDataWithFeedback(accountName, data, this);
+            // 忽略 input[type=text] 的 change，由 input/blur 处理
+            if (target.type === 'text' || target.tagName === 'TEXTAREA') return;
 
-                    } else if (this.type === 'number') {
-                        value = parseInt(this.value) || 0;
+            saveRowData(target);
+        }
 
-                        // 对于数字字段，也需要获取当前行的所有数据，避免覆盖其他字段
-                        const row = this.closest('tr');
-                        const data = {
-                            account_name: accountName,
-                            // 获取当前行所有复选框的状态
-                            weekly_fishing_done: row.querySelector('[data-field="weekly_fishing_done"]')?.checked || false,
-                            weekly_boss_done: row.querySelector('[data-field="weekly_boss_done"]')?.checked || false,
-                            weekly_alliance_done: row.querySelector('[data-field="weekly_alliance_done"]')?.checked || false,
-                            weekly_points_done: row.querySelector('[data-field="weekly_points_done"]')?.checked || false,
-                            // 获取当前行所有其他字段的值
-                            group_name: row.querySelector('[data-field="group_name"]')?.value || '',
-                            collect_level: parseInt(row.querySelector('[data-field="collect_level"]')?.value) || 0,
-                            craft_level: parseInt(row.querySelector('[data-field="craft_level"]')?.value) || 0,
-                            combat_level: parseInt(row.querySelector('[data-field="combat_level"]')?.value) || 0,
-                            notes: row.querySelector('[data-field="notes"]')?.value || ''
-                        };
+        // 处理 Input 事件 (Text/Number typing) - 防抖
+        let inputDebounceTimer;
+        function handleInputDebounced(e) {
+            const target = e.target;
+            if (!target.hasAttribute('data-field')) return;
+            if (target.type === 'checkbox') return;
 
-                        saveAccountDataWithFeedback(accountName, data, this);
-                    } else {
-                        value = this.value;
+            clearTimeout(inputDebounceTimer);
+            inputDebounceTimer = setTimeout(() => {
+                // 对于 text/textarea，输入时静默保存（不带反馈动画，或者轻微反馈）
+                // 使用 saveAccountData 而不是 saveAccountDataWithFeedback 以避免打断输入
+                const row = target.closest('tr');
+                const accountName = row.getAttribute('data-account');
+                const data = collectRowData(row, accountName);
+                saveAccountData(accountName, data);
+            }, 1000);
+        }
 
-                        // 对于其他字段，也需要获取当前行的所有数据，避免覆盖其他字段
-                        const row = this.closest('tr');
-                        const data = {
-                            account_name: accountName,
-                            // 获取当前行所有复选框的状态
-                            weekly_fishing_done: row.querySelector('[data-field="weekly_fishing_done"]')?.checked || false,
-                            weekly_boss_done: row.querySelector('[data-field="weekly_boss_done"]')?.checked || false,
-                            weekly_alliance_done: row.querySelector('[data-field="weekly_alliance_done"]')?.checked || false,
-                            weekly_points_done: row.querySelector('[data-field="weekly_points_done"]')?.checked || false,
-                            // 获取当前行所有其他字段的值
-                            group_name: row.querySelector('[data-field="group_name"]')?.value || '',
-                            collect_level: parseInt(row.querySelector('[data-field="collect_level"]')?.value) || 0,
-                            craft_level: parseInt(row.querySelector('[data-field="craft_level"]')?.value) || 0,
-                            combat_level: parseInt(row.querySelector('[data-field="combat_level"]')?.value) || 0,
-                            notes: row.querySelector('[data-field="notes"]')?.value || ''
-                        };
+        // 处理 Blur 事件
+        function handleInputBlur(e) {
+            const target = e.target;
+            if (!target.hasAttribute('data-field')) return;
+            if (target.type === 'text' || target.tagName === 'TEXTAREA') {
+                const row = target.closest('tr');
+                const accountName = row.getAttribute('data-account');
+                const data = collectRowData(row, accountName);
+                saveAccountData(accountName, data);
+            }
+        }
 
-                        saveAccountDataWithFeedback(accountName, data, this);
-                    }
+        // 处理 Keydown (Enter)
+        function handleInputKeydown(e) {
+            if (e.key === 'Enter') {
+                const target = e.target;
+                if (!target.hasAttribute('data-field')) return;
+                
+                const row = target.closest('tr');
+                const accountName = row.getAttribute('data-account');
+                const data = collectRowData(row, accountName);
+                saveAccountData(accountName, data);
+                target.blur(); // 移除焦点
+            }
+        }
 
-                    // 添加数据更新动画
-                    const row = this.closest('tr');
-                    if (row) {
-                        row.classList.add('data-update');
-                        setTimeout(() => row.classList.remove('data-update'), 500);
-                    }
-                });
+        // 收集行数据辅助函数
+        function collectRowData(row, accountName) {
+            return {
+                account_name: accountName,
+                weekly_fishing_done: row.querySelector('[data-field="weekly_fishing_done"]')?.checked || false,
+                weekly_boss_done: row.querySelector('[data-field="weekly_boss_done"]')?.checked || false,
+                weekly_alliance_done: row.querySelector('[data-field="weekly_alliance_done"]')?.checked || false,
+                weekly_points_done: row.querySelector('[data-field="weekly_points_done"]')?.checked || false,
+                group_name: row.querySelector('[data-field="group_name"]')?.value || '',
+                collect_level: parseInt(row.querySelector('[data-field="collect_level"]')?.value) || 0,
+                craft_level: parseInt(row.querySelector('[data-field="craft_level"]')?.value) || 0,
+                combat_level: parseInt(row.querySelector('[data-field="combat_level"]')?.value) || 0,
+                notes: row.querySelector('[data-field="notes"]')?.value || ''
+            };
+        }
 
-                // 对于文本输入框，添加多种保存触发方式
-                if (element.type === 'text' || element.tagName === 'TEXTAREA') {
-                    let saveTimeout;
-
-                    // 失去焦点时保存
-                    element.addEventListener('blur', function () {
-                        const row = this.closest('tr');
-                        const data = {
-                            account_name: accountName,
-                            // 获取当前行所有复选框的状态
-                            weekly_fishing_done: row.querySelector('[data-field="weekly_fishing_done"]')?.checked || false,
-                            weekly_boss_done: row.querySelector('[data-field="weekly_boss_done"]')?.checked || false,
-                            weekly_alliance_done: row.querySelector('[data-field="weekly_alliance_done"]')?.checked || false,
-                            weekly_points_done: row.querySelector('[data-field="weekly_points_done"]')?.checked || false,
-                            // 获取当前行所有其他字段的值
-                            group_name: row.querySelector('[data-field="group_name"]')?.value || '',
-                            collect_level: parseInt(row.querySelector('[data-field="collect_level"]')?.value) || 0,
-                            craft_level: parseInt(row.querySelector('[data-field="craft_level"]')?.value) || 0,
-                            combat_level: parseInt(row.querySelector('[data-field="combat_level"]')?.value) || 0,
-                            notes: row.querySelector('[data-field="notes"]')?.value || ''
-                        };
-                        saveAccountData(accountName, data);
-                    });
-
-                    // 输入时延迟保存（防抖）
-                    element.addEventListener('input', function () {
-                        clearTimeout(saveTimeout);
-                        saveTimeout = setTimeout(() => {
-                            const row = this.closest('tr');
-                            const data = {
-                                account_name: accountName,
-                                // 获取当前行所有复选框的状态
-                                weekly_fishing_done: row.querySelector('[data-field="weekly_fishing_done"]')?.checked || false,
-                                weekly_boss_done: row.querySelector('[data-field="weekly_boss_done"]')?.checked || false,
-                                weekly_alliance_done: row.querySelector('[data-field="weekly_alliance_done"]')?.checked || false,
-                                weekly_points_done: row.querySelector('[data-field="weekly_points_done"]')?.checked || false,
-                                // 获取当前行所有其他字段的值
-                                group_name: row.querySelector('[data-field="group_name"]')?.value || '',
-                                collect_level: parseInt(row.querySelector('[data-field="collect_level"]')?.value) || 0,
-                                craft_level: parseInt(row.querySelector('[data-field="craft_level"]')?.value) || 0,
-                                combat_level: parseInt(row.querySelector('[data-field="combat_level"]')?.value) || 0,
-                                notes: row.querySelector('[data-field="notes"]')?.value || ''
-                            };
-                            saveAccountData(accountName, data);
-                        }, 1000); // 1秒后保存
-                    });
-
-                    // 回车键保存
-                    element.addEventListener('keydown', function (e) {
-                        if (e.key === 'Enter') {
-                            const row = this.closest('tr');
-                            const data = {
-                                account_name: accountName,
-                                // 获取当前行所有复选框的状态
-                                weekly_fishing_done: row.querySelector('[data-field="weekly_fishing_done"]')?.checked || false,
-                                weekly_boss_done: row.querySelector('[data-field="weekly_boss_done"]')?.checked || false,
-                                weekly_alliance_done: row.querySelector('[data-field="weekly_alliance_done"]')?.checked || false,
-                                weekly_points_done: row.querySelector('[data-field="weekly_points_done"]')?.checked || false,
-                                // 获取当前行所有其他字段的值
-                                group_name: row.querySelector('[data-field="group_name"]')?.value || '',
-                                collect_level: parseInt(row.querySelector('[data-field="collect_level"]')?.value) || 0,
-                                craft_level: parseInt(row.querySelector('[data-field="craft_level"]')?.value) || 0,
-                                combat_level: parseInt(row.querySelector('[data-field="combat_level"]')?.value) || 0,
-                                notes: row.querySelector('[data-field="notes"]')?.value || ''
-                            };
-                            saveAccountData(accountName, data);
-                        }
-                    });
-                }
-            });
+        function saveRowData(target) {
+            const row = target.closest('tr');
+            const accountName = row.getAttribute('data-account');
+            const data = collectRowData(row, accountName);
+            
+            saveAccountDataWithFeedback(accountName, data, target);
+            
+            // 动画
+            row.classList.add('data-update');
+            setTimeout(() => row.classList.remove('data-update'), 500);
         }
 
 
@@ -2538,11 +2675,16 @@ function renderData(data) {
             if (socket) {
                 return;
             }
-            socket = io();
+            try {
+                if (typeof io === 'undefined') {
+                    console.warn('Socket.io not loaded');
+                    return;
+                }
+                socket = io();
 
-            socket.on('connect', function() {
-                console.log('WebSocket connected!');
-            });
+                socket.on('connect', function() {
+                    console.log('WebSocket connected!');
+                });
 
             socket.on('initial_data', function(data) {
                 console.log('Received initial data');
@@ -2552,32 +2694,33 @@ function renderData(data) {
             socket.on('update_single_account', function(data) {
                 console.log('Received single account update:', data);
 
-                // 1. 更新对应的表格行
+                // 1. 更新数据源
+                const index = allRowsData.findIndex(acc => !acc.isHeader && acc.account_name === data.account_name);
+                if (index !== -1) {
+                    allRowsData[index].gold_quantity = data.new_quantity;
+                    allRowsData[index].change = data.new_change;
+                }
+
+                // 2. 如果行当前可见，直接更新DOM
                 const row = document.querySelector(`tr[data-account="${data.account_name}"]`);
                 if (row) {
-                    // 更新金条数量
                     const quantityCell = row.querySelector('.quantity-display');
-                    if (quantityCell) {
-                        quantityCell.textContent = formatNumber(data.new_quantity);
-                    }
+                    if (quantityCell) quantityCell.textContent = formatNumber(data.new_quantity);
 
-                    // 更新变化量
                     const changeCell = row.querySelector('.change-display');
                     if (changeCell) {
                         changeCell.textContent = `${data.new_change >= 0 ? '+' : ''}${formatNumber(data.new_change)}`;
                         changeCell.className = `change-display ${data.new_change >= 0 ? 'positive' : 'negative'}`;
                     }
-                    
-                    // 添加高亮动画
                     row.classList.add('data-update');
                     setTimeout(() => row.classList.remove('data-update'), 1000);
                 }
 
-                // 2. 更新总计卡片
+                // 3. 更新总计卡片
                 document.getElementById('totalGold').textContent = formatNumber(data.total_gold);
                 document.getElementById('totalChange').textContent = `${data.total_change >= 0 ? '+' : ''}${formatNumber(data.total_change)}`;
                 
-                // 3. 更新最后刷新时间
+                // 4. 更新最后刷新时间
                 document.getElementById('lastRefresh').textContent = `最后更新: ${new Date().toLocaleString('zh-CN')}`;
             });
 
@@ -2605,6 +2748,9 @@ function renderData(data) {
                 }
                 modal.classList.remove('visible');
             });
+            } catch (e) {
+                console.error('Socket initialization failed:', e);
+            }
         }
 
         // 设置列宽调整功能

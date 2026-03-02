@@ -16,11 +16,20 @@ logs/
 server_err.txt
 server_out.txt
 
-# Project Specific
+# Project Specific (Temporary/Output)
 downloads/
 screenshots/
 .joycode/
+.idea/
+.vscode/
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Development/Testing Files (Not for runtime)
+test_*.py
+check_gpu.py
+GoldManager_Next/
+package-lock.json
+README.md

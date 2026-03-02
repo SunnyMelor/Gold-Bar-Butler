@@ -15,37 +15,61 @@
             box-sizing: border-box;
         }
 
+        /* 自定义滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
         body {
             font-family: 'Inter', 'Segoe UI', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
             background-size: 400% 400%;
+            background-attachment: fixed;
             animation: gradientShift 30s ease infinite;
             min-height: 100vh;
-            padding: 20px;
+            padding: 20px 20px 60px 20px; /* 底部留白 */
             line-height: 1.6;
             color: #ffffff;
+            overflow-y: auto;
         }
 
         @keyframes gradientShift {
-            0% {
-                background-position: 0% 50%;
-            }
+            0% { background-position: 0% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+            100% { background-position: 0% 50%; }
+        }
 
-            25% {
-                background-position: 100% 50%;
-            }
+        /* 动画类 */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
 
-            50% {
-                background-position: 100% 100%;
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-            75% {
-                background-position: 0% 100%;
-            }
+        .slide-up {
+            animation: slideUp 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
 
-            100% {
-                background-position: 0% 50%;
-            }
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .container {
@@ -60,33 +84,6 @@
             position: relative;
         }
 
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 4px;
-            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
-            border-radius: 2px;
-            animation: shimmer 3s ease-in-out infinite;
-        }
-
-        @keyframes shimmer {
-
-            0%,
-            100% {
-                opacity: 0.6;
-                transform: translateX(-50%) scaleX(1);
-            }
-
-            50% {
-                opacity: 1;
-                transform: translateX(-50%) scaleX(1.2);
-            }
-        }
-
         .header h1 {
             font-size: 3.2em;
             margin-bottom: 12px;
@@ -96,21 +93,12 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            letter-spacing: -0.02em;
             animation: gradientText 6s ease infinite;
-            text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
         }
 
         @keyframes gradientText {
-
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         .header p {
@@ -140,51 +128,12 @@
             font-size: 14px;
             border: 1px solid rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(20px);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nav-links a::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.6s;
-        }
-
-        .nav-links a:hover::before {
-            left: 100%;
-        }
-
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #4ecdc4, #45b7d1);
-            transition: all 0.3s ease;
-            transform: translateX(-50%);
-        }
-
-        .nav-links a.active::after {
-            width: 80%;
-        }
-
-        .nav-links a:hover::after {
-            width: 60%;
         }
 
         .nav-links a:hover {
             background: rgba(255, 255, 255, 0.15);
             color: #ffffff;
             transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            border-color: rgba(255, 255, 255, 0.3);
         }
 
         .nav-links a.active {
@@ -194,62 +143,19 @@
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
-        /* 页面切换动画 */
-        .page-transition {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .page-fade-out {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-
-        .page-fade-in {
-            opacity: 1;
-            transform: translateY(0);
-            animation: pageSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes pageSlideIn {
-            0% {
-                opacity: 0;
-                transform: translateY(30px) scale(0.98);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         .controls {
-            padding: 20px 24px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 24px 32px;
+            background: rgba(15, 23, 42, 0.4); /* 更通透的背景 */
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(20px);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 30px;
+            gap: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
         }
 
         .filter-group {
@@ -293,7 +199,6 @@
         .btn-primary {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .btn-primary:hover {
@@ -301,456 +206,516 @@
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-success {
-            background: linear-gradient(135deg, #4ecdc4, #44a08d);
-            color: white;
-            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
-        }
-
-        .stats-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 16px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(20px);
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .stat-card h3 {
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 8px;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-
-        .stat-card .value {
-            font-size: 1.8em;
-            font-weight: 800;
-            background: linear-gradient(135deg, #feca57, #ff9ff3, #4ecdc4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+        /* --- Performance & Layout Optimization --- */
 
         .data-table-container {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(20px);
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            /* 允许内容撑开，移除overflow: hidden/auto */
+            overflow: visible;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 40px;
+        }
+
+        .table-scroll-area {
+            overflow: visible;
         }
 
         .data-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate; /* 允许圆角和间距 */
+            border-spacing: 0;
+            table-layout: fixed;
+        }
+
+        .data-table th, .data-table td {
+            padding: 20px 24px;
+            text-align: left;
         }
 
         .data-table th {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-            color: #ffffff;
-            padding: 16px 20px;
-            text-align: left;
-            font-weight: 700;
-            font-size: 14px;
+            /* 确保背景不透明度足够，防止滚动时内容重叠视觉混乱 */
+            background: rgba(11, 17, 32, 0.95);
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 13px;
             letter-spacing: 0.5px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            transition: background 0.3s ease;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            
+            /* Sticky Header Logic */
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-
-        .data-table th:hover {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
-        }
+        
+        /* 表头圆角处理 */
+        .data-table th:first-child { border-top-left-radius: 24px; }
+        .data-table th:last-child { border-top-right-radius: 24px; }
 
         .data-table td {
-            padding: 16px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.2s ease;
-        }
-
-        .data-table tr:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .account-name {
-            font-weight: 700;
-            color: #4ecdc4;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            height: 72px; /* 增加行高 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #e2e8f0;
             font-size: 15px;
         }
 
-        .quantity {
-            font-size: 1.3em;
-            font-weight: 800;
-            background: linear-gradient(135deg, #feca57, #ff9ff3);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: 0.5px;
+        /* 动态交互效果 */
+        .data-table tr {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .timestamp {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 13px;
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+            color: #ffffff;
         }
 
-        .table-container {
-            max-height: 500px;
-            overflow-y: auto;
+        .account-name { color: #4ecdc4; font-weight: 700; }
+        .quantity { color: #feca57; font-weight: 800; }
+        .timestamp { color: rgba(255, 255, 255, 0.7); font-size: 13px; }
+
+        /* --- Skeleton Loading Animation --- */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
-        .loading,
-        .error,
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(20px);
+        .skeleton-row td div {
+            height: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
-        .loading h3,
-        .empty-state h3 {
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 12px;
-            font-size: 1.5em;
-        }
+        .skeleton-text-short { width: 40%; }
+        .skeleton-text-medium { width: 60%; }
+        .skeleton-text-long { width: 80%; }
 
-        .loading p,
-        .empty-state p {
-            color: rgba(255, 255, 255, 0.7);
+        /* --- Pagination & Infinite Scroll Controls --- */
+        
+        /* Default: Infinite Scroll Sentinel (Mobile) */
+        .sentinel {
+            height: 20px;
+            width: 100%;
+            margin-top: 10px;
+            /* Debug: background: red; */
         }
-
-        .error {
-            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(238, 82, 83, 0.1));
-            border-color: rgba(255, 107, 107, 0.3);
-        }
-
-        .error h3 {
-            color: #ff6b6b;
-        }
-
-        .footer {
+        
+        .loading-spinner {
             text-align: center;
             padding: 20px;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.7);
             font-size: 14px;
-            margin-top: 30px;
+            display: none;
+        }
+        .loading-spinner.active { display: block; }
+
+        /* Desktop Pagination Controls */
+        .pagination-controls {
+            display: none; /* Hidden on mobile */
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.4); /* 深色背景 */
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
         }
 
-        @media (max-width: 768px) {
-            .controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
+        .page-info { font-size: 14px; color: rgba(255, 255, 255, 0.8); }
 
-            .stats-summary {
-                grid-template-columns: 1fr;
-            }
+        .pagination-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-left: 12px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* --- Responsive Logic --- */
+        @media (min-width: 768px) {
+            /* Desktop Mode */
+            .pagination-controls { display: flex; }
+            .sentinel { display: none; }
         }
     </style>
 </head>
 
 <body>
-    <div class="container fade-in">
-        <div class="header fade-in">
+    <div class="container">
+        <div class="header">
             <h1>金条管家 v1.1</h1>
             <p>历史数据透视表</p>
         </div>
 
-        <div class="nav-links fade-in">
-            <a href="/" onclick="handlePageTransition(event, '/')">📊 主面板</a>
-            <a href="/history" class="active" onclick="handlePageTransition(event, '/history')">📈 历史记录</a>
-            <a href="/groups" onclick="handlePageTransition(event, '/groups')">📂 分组管理</a>
-            <a href="/days-tracker" onclick="handlePageTransition(event, '/days-tracker')">🌱 萌芽计划</a>
+        <div class="nav-links">
+            <a href="/">📊 主面板</a>
+            <a href="/history" class="active">📈 历史记录</a>
+            <a href="/groups">📂 分组管理</a>
+            <a href="/days-tracker">🌱 萌芽计划</a>
         </div>
 
         <div class="controls">
             <div style="display: flex; gap: 16px; flex-wrap: wrap;">
                 <div class="filter-group">
                     <label for="accountFilter">账号筛选:</label>
-                    <select id="accountFilter">
+                    <select id="accountFilter" onchange="handleFilterChange()">
                         <option value="">全部账号</option>
+                        <!-- Options populated via API -->
                     </select>
                 </div>
 
                 <div class="filter-group">
                     <label for="dateFilter">日期筛选:</label>
-                    <input type="date" id="dateFilter">
+                    <input type="date" id="dateFilter" onchange="handleFilterChange()">
                 </div>
             </div>
 
-            <div style="display: flex; gap: 8px;">
-                <button class="btn btn-primary" onclick="applyFilters()">🔍 应用筛选</button>
-                <button class="btn btn-success" onclick="exportData()">📥 导出数据</button>
+            <!-- Export not implemented for paginated data in this view context yet, keeping simple -->
+            <button class="btn btn-primary" onclick="handleFilterChange()">🔄 刷新数据</button>
+        </div>
+
+        <div class="data-table-container">
+            <div class="table-scroll-area" id="scrollArea">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th width="35%">🎮 账号名称</th>
+                            <th width="30%">💰 金条数量</th>
+                            <th width="35%">🕒 记录时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Data rows go here -->
+                    </tbody>
+                </table>
+                
+                <!-- Sentinel for Infinite Scroll (Mobile) -->
+                <div id="sentinel" class="sentinel"></div>
+                <div id="loadingSpinner" class="loading-spinner">
+                    ⏳ 正在加载更多数据...
+                </div>
+            </div>
+
+            <!-- Pagination Controls (Desktop) -->
+            <div class="pagination-controls">
+                <div class="page-info" id="pageInfo">第 1 页</div>
+                <div>
+                    <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)" disabled>上一页</button>
+                    <button class="pagination-btn" id="nextBtn" onclick="changePage(1)">下一页</button>
+                </div>
             </div>
         </div>
 
-        <div class="stats-summary" id="statsSummary" style="display: none;">
-            <div class="stat-card">
-                <h3>总记录数</h3>
-                <div class="value" id="totalRecords">0</div>
-            </div>
-            <div class="stat-card">
-                <h3>活跃账号</h3>
-                <div class="value" id="activeAccounts">0</div>
-            </div>
-            <div class="stat-card">
-                <h3>最新记录</h3>
-                <div class="value" id="latestRecord" style="font-size: 1.2em;">--</div>
-            </div>
-        </div>
-
-        <div id="dataContainer" class="page-transition">
-            <div class="loading">
-                <h3>📡 正在加载历史数据...</h3>
-                <p>请稍候</p>
-            </div>
-        </div>
-
-        <div class="footer">
-            <p>💡 提示: 点击表头可以排序 | 使用筛选功能查看特定数据</p>
+        <div style="text-align: center; margin-top: 20px; font-size: 13px; color: rgba(255,255,255,0.5);">
+            <p id="totalRecordsInfo">总记录数: --</p>
         </div>
     </div>
 
     <script>
-        let allData = [];
-        let filteredData = [];
-        let sortColumn = -1;
-        let sortDirection = 1;
+        // --- State Management ---
+        const state = {
+            page: 1,
+            perPage: 20, // Default chunk size
+            loading: false,
+            hasMore: true,
+            total: 0,
+            filters: {
+                account_name: '',
+                date: ''
+            },
+            mode: window.innerWidth < 768 ? 'infinite' : 'pagination'
+        };
 
-        function formatTime(timeString) {
-            const date = new Date(timeString);
-            return date.toLocaleString('zh-CN');
-        }
+        // --- DOM Elements ---
+        const tableBody = document.getElementById('tableBody');
+        const sentinel = document.getElementById('sentinel');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const pageInfo = document.getElementById('pageInfo');
+        const totalRecordsInfo = document.getElementById('totalRecordsInfo');
 
-        function updateStats(data) {
-            const totalRecords = data.length;
-            const uniqueAccounts = [...new Set(data.map(item => item.account_name))].length;
-            const latestRecord = data.length > 0 ? formatTime(data[0].timestamp) : '--';
-
-            document.getElementById('totalRecords').textContent = totalRecords.toLocaleString();
-            document.getElementById('activeAccounts').textContent = uniqueAccounts;
-            document.getElementById('latestRecord').textContent = latestRecord;
-
-            document.getElementById('statsSummary').style.display = 'grid';
-        }
-
-        function populateAccountFilter(data) {
-            const accounts = [...new Set(data.map(item => item.account_name))].sort();
-            const select = document.getElementById('accountFilter');
-
-            select.innerHTML = '<option value="">全部账号</option>';
-
-            accounts.forEach(account => {
-                const option = document.createElement('option');
-                option.value = account;
-                option.textContent = account;
-                select.appendChild(option);
-            });
-        }
-
-        function renderTable(data) {
-            const container = document.getElementById('dataContainer');
-
-            if (data.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <h3>📭 暂无历史数据</h3>
-                        <p>请使用扫描器记录数据</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let tableHTML = `
-                <div class="data-table-container">
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th onclick="sortTable(0)">🎮 账号名称 ${sortColumn === 0 ? (sortDirection === 1 ? '↑' : '↓') : '↕️'}</th>
-                                    <th onclick="sortTable(1)">💰 金条数量 ${sortColumn === 1 ? (sortDirection === 1 ? '↑' : '↓') : '↕️'}</th>
-                                    <th onclick="sortTable(2)">🕒 记录时间 ${sortColumn === 2 ? (sortDirection === 1 ? '↑' : '↓') : '↕️'}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-            `;
-
-            data.forEach(item => {
-                tableHTML += `
-                    <tr>
-                        <td class="account-name">${item.account_name}</td>
-                        <td class="quantity">${item.quantity.toLocaleString()}</td>
-                        <td class="timestamp">${formatTime(item.timestamp)}</td>
-                    </tr>
-                `;
-            });
-
-            tableHTML += `
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            `;
-
-            container.innerHTML = tableHTML;
-        }
-
-        function sortTable(column) {
-            if (sortColumn === column) {
-                sortDirection *= -1;
-            } else {
-                sortColumn = column;
-                sortDirection = 1;
-            }
-
-            filteredData.sort((a, b) => {
-                let aVal, bVal;
-                switch (column) {
-                    case 0: // 账号名称
-                        aVal = a.account_name;
-                        bVal = b.account_name;
-                        break;
-                    case 1: // 金条数量
-                        aVal = a.quantity;
-                        bVal = b.quantity;
-                        break;
-                    case 2: // 记录时间
-                        aVal = new Date(a.timestamp);
-                        bVal = new Date(b.timestamp);
-                        break;
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAccountNames();
+            loadData(true);
+            setupIntersectionObserver();
+            
+            // Handle resize to switch modes if necessary
+            window.addEventListener('resize', debounce(() => {
+                const newMode = window.innerWidth < 768 ? 'infinite' : 'pagination';
+                if (newMode !== state.mode) {
+                    state.mode = newMode;
+                    // If switching mode, reset to page 1 to avoid confusion
+                    loadData(true); 
                 }
+            }, 500));
+        });
 
-                if (aVal < bVal) return -1 * sortDirection;
-                if (aVal > bVal) return 1 * sortDirection;
-                return 0;
-            });
-
-            renderTable(filteredData);
-        }
-
-        function loadData() {
-            fetch('/api/history-data')
-                .then(response => response.json())
-                .then(data => {
-                    allData = data;
-                    filteredData = data;
-
-                    updateStats(data);
-                    populateAccountFilter(data);
-                    renderTable(data);
-                })
-                .catch(error => {
-                    console.error('Error loading data:', error);
-                    document.getElementById('dataContainer').innerHTML = `
-                        <div class="error">
-                            <h3>❌ 数据加载失败</h3>
-                            <p>请检查服务器是否正常运行</p>
-                            <p>错误信息: ${error.message}</p>
-                        </div>
-                    `;
+        // --- API Calls ---
+        
+        async function loadAccountNames() {
+            try {
+                const res = await fetch('/api/account-names');
+                const names = await res.json();
+                const select = document.getElementById('accountFilter');
+                
+                // Keep the first option
+                select.innerHTML = '<option value="">全部账号</option>';
+                
+                names.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    select.appendChild(option);
                 });
+            } catch (err) {
+                console.error('Failed to load account names:', err);
+            }
         }
 
-        function applyFilters() {
-            const accountFilter = document.getElementById('accountFilter').value;
-            const dateFilter = document.getElementById('dateFilter').value;
+        async function loadData(reset = false) {
+            if (state.loading) return;
+            if (reset) {
+                state.page = 1;
+                state.hasMore = true;
+                state.total = 0;
+                tableBody.innerHTML = ''; // Clear table
+            }
+            if (!state.hasMore && !reset) return;
 
-            filteredData = allData.filter(item => {
-                let matchAccount = !accountFilter || item.account_name === accountFilter;
-                let matchDate = !dateFilter || item.timestamp.startsWith(dateFilter);
-                return matchAccount && matchDate;
+            state.loading = true;
+            updateLoadingUI(true);
+
+            // Show skeleton only on reset (initial load)
+            if (reset) renderSkeleton(5);
+
+            try {
+                const params = new URLSearchParams({
+                    page: state.page,
+                    per_page: state.perPage,
+                    account_name: state.filters.account_name,
+                    date: state.filters.date
+                });
+
+                const response = await fetch(`/api/history-data?${params.toString()}`);
+                const result = await response.json();
+
+                if (result.error) throw new Error(result.error);
+
+                // Remove skeleton if present
+                const skeletons = tableBody.querySelectorAll('.skeleton-row');
+                skeletons.forEach(el => el.remove());
+
+                renderRows(result.data);
+
+                state.total = result.total;
+                state.hasMore = result.has_next;
+                state.page = result.page;
+                
+                updatePaginationUI();
+                updateTotalInfo();
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                tableBody.innerHTML += `<tr><td colspan="3" style="text-align:center; color: #ff6b6b;">加载失败: ${error.message}</td></tr>`;
+            } finally {
+                state.loading = false;
+                updateLoadingUI(false);
+            }
+        }
+
+        // --- Rendering Strategy (Fragment & Layout) ---
+
+        function renderRows(rows) {
+            const fragment = document.createDocumentFragment();
+            const safeRows = rows || [];
+
+            if (safeRows.length === 0 && state.page === 1) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="3" style="text-align:center; color: rgba(255,255,255,0.5); padding: 40px;">📭 暂无数据</td>`;
+                fragment.appendChild(tr);
+            } else {
+                safeRows.forEach((row, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'slide-up'; // 添加进场动画
+                    tr.style.animationDelay = `${index * 30}ms`; // 错落动画
+                    
+                    tr.innerHTML = `
+                        <td class="account-name">${row.account_name || '未知账号'}</td>
+                        <td class="quantity">${(row.quantity !== undefined && row.quantity !== null) ? Number(row.quantity).toLocaleString() : '0'}</td>
+                        <td class="timestamp">${formatTime(row.timestamp)}</td>
+                    `;
+                    fragment.appendChild(tr);
+                });
+            }
+
+            tableBody.appendChild(fragment);
+        }
+
+        function renderSkeleton(count) {
+            const fragment = document.createDocumentFragment();
+            for (let i = 0; i < count; i++) {
+                const tr = document.createElement('tr');
+                tr.className = 'skeleton-row';
+                tr.innerHTML = `
+                    <td><div class="skeleton-text-medium"></div></td>
+                    <td><div class="skeleton-text-short"></div></td>
+                    <td><div class="skeleton-text-long"></div></td>
+                `;
+                fragment.appendChild(tr);
+            }
+            tableBody.appendChild(fragment);
+        }
+
+        // --- UI Updates ---
+
+        function updateLoadingUI(isLoading) {
+            if (state.mode === 'infinite') {
+                loadingSpinner.className = isLoading ? 'loading-spinner active' : 'loading-spinner';
+            }
+        }
+
+        function updatePaginationUI() {
+            if (state.mode === 'pagination') {
+                pageInfo.textContent = `第 ${state.page} 页 / 共 ${Math.ceil(state.total / state.perPage) || 1} 页`;
+                prevBtn.disabled = state.page <= 1;
+                nextBtn.disabled = !state.hasMore;
+            }
+        }
+        
+        function updateTotalInfo() {
+            totalRecordsInfo.textContent = `总记录数: ${state.total.toLocaleString()}`;
+        }
+
+        // --- Interactions ---
+
+        function handleFilterChange() {
+            state.filters.account_name = document.getElementById('accountFilter').value;
+            state.filters.date = document.getElementById('dateFilter').value;
+            loadData(true);
+        }
+
+        function changePage(direction) {
+            const newPage = state.page + direction;
+            if (newPage < 1) return;
+            // Optimistic check
+            if (direction > 0 && !state.hasMore) return;
+            
+            state.page = newPage;
+            // In pagination mode, we typically replace content, so reset=true but force page number
+            // However, loadData(reset=true) sets page=1. We need a way to load specific page replacing content.
+            // Let's modify loadData slightly or handle it here.
+            
+            // Logic adjust: loadData(reset) clears table.
+            // For pagination, we want to clear table AND load specific page.
+            tableBody.innerHTML = '';
+            renderSkeleton(5);
+            // We need to bypass the page=1 reset in loadData
+            // Let's just manually set loading state and call fetch
+            // Or better, refactor loadData to accept page param or respect state.page if not full reset.
+            
+            // Quick Fix: Adjust loadData to not reset page if we set it manually before calling and pass reset=false?
+            // No, reset=false appends.
+            // We need a mode to "replace current data".
+            
+            fetchDataForPagination(newPage);
+        }
+        
+        async function fetchDataForPagination(page) {
+            if (state.loading) return;
+            state.loading = true;
+            state.page = page;
+            tableBody.innerHTML = '';
+            renderSkeleton(5);
+            updatePaginationUI(); // Update disabled states optimistically
+            
+            try {
+                const params = new URLSearchParams({
+                    page: state.page,
+                    per_page: state.perPage,
+                    account_name: state.filters.account_name,
+                    date: state.filters.date
+                });
+                const response = await fetch(`/api/history-data?${params.toString()}`);
+                const result = await response.json();
+                
+                tableBody.innerHTML = ''; // Clear skeleton
+                renderRows(result.data);
+                
+                state.total = result.total || 0;
+                state.hasMore = result.has_next;
+                state.page = result.page || page; // Confirm page from server or keep requested
+                updatePaginationUI();
+                updateTotalInfo();
+            } catch(e) {
+                console.error(e);
+            } finally {
+                state.loading = false;
+            }
+        }
+
+        // --- Infinite Scroll (Intersection Observer) ---
+        function setupIntersectionObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                // Only trigger if in infinite mode, visible, and has more data
+                if (state.mode === 'infinite' && entries[0].isIntersecting && state.hasMore && !state.loading) {
+                    state.page++;
+                    loadData(false); // Append
+                }
+            }, {
+                root: null, // null means verify against viewport (window)
+                threshold: 0.1,
+                rootMargin: '200px' // Preload before reaching bottom
             });
 
-            updateStats(filteredData);
-            renderTable(filteredData);
+            observer.observe(sentinel);
         }
 
-        function exportData() {
-            if (filteredData.length === 0) {
-                alert('没有数据可以导出');
-                return;
+        // --- Utils ---
+        function formatTime(timeString) {
+            if (!timeString) return '--';
+            try {
+                const date = new Date(timeString);
+                return date.toLocaleString('zh-CN');
+            } catch (e) {
+                return timeString;
             }
-
-            const csvContent = "data:text/csv;charset=utf-8,"
-                + "账号名称,金条数量,记录时间\n"
-                + filteredData.map(item =>
-                    `${item.account_name},${item.quantity},${item.timestamp}`
-                ).join("\n");
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `金条管家历史数据_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
 
-        // 页面切换动画处理
-        function handlePageTransition(event, url) {
-            event.preventDefault();
-
-            // 添加淡出效果
-            const container = document.getElementById('dataContainer');
-            const statsSummary = document.getElementById('statsSummary');
-
-            container.classList.add('page-fade-out');
-            if (statsSummary) {
-                statsSummary.classList.add('page-fade-out');
-            }
-
-            // 更新导航状态
-            document.querySelectorAll('.nav-links a').forEach(link => {
-                link.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            // 延迟跳转，让动画播放完成
-            setTimeout(() => {
-                window.location.href = url;
-            }, 200);
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
         }
-
-        // 页面加载完成后的初始化
-        function initializePage() {
-            // 添加页面淡入效果
-            const container = document.getElementById('dataContainer');
-            const statsSummary = document.getElementById('statsSummary');
-
-            container.classList.add('page-fade-in');
-            if (statsSummary) {
-                statsSummary.classList.add('page-fade-in');
-            }
-
-            loadData();
-        }
-
-        // 页面加载完成后开始加载数据
-        document.addEventListener('DOMContentLoaded', initializePage);
     </script>
 </body>
-
 </html>
